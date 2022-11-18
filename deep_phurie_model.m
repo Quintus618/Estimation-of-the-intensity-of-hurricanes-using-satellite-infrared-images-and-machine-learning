@@ -4,16 +4,24 @@ close all
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PROGRAM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nc_file = 'data.nc' ;
+
+nc_file = './HURSAT-B1/2004/HURSAT_b1_v06_2004001S16124_KEN_c20170721/2004001S16124.KEN.2004.01.01.0600.41.GOE-9.013.hursat-b1.v06.nc'
+%h5_file = './deep-Phurie-master/model/model.h5'
+%h5disp(h5_file)
 
 % Get information about the file
-ncinfo(nc_file);
+ncinfo(nc_file)
 
 % Display the file
 ncdisp(nc_file);
 
 % Open and read a NC file with particular variable
-hurricane_data = ncread(nc_file,'peaks');
+ hurricane_image = ncread(nc_file,'VSCHN');
+ imshow(hurricane_image)
+ hurricane_wind_speed = ncread(nc_file,'WindSpd');
+ hurricane_long_cent = ncread(nc_file,'archer_lon');
+ hurricane_lat_cent = ncread(nc_file,'archer_lat');
+ hurricane_sat_name = ncreadatt(nc_file,"/","Satellite_Name");
 
 % Download HURSAT-B1 dataset from 2004 to 2009
 
@@ -75,6 +83,9 @@ end
 
 % Convolutional Neural Network
 function model = convo_neural_network()
+    layers = [
+        
+    ]
 end
 
 
