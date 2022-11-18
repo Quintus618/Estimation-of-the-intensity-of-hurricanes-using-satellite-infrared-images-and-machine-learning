@@ -9,6 +9,19 @@ nc_file = './HURSAT-B1/2004/HURSAT_b1_v06_2004001S16124_KEN_c20170721/2004001S16
 %h5_file = './deep-Phurie-master/model/model.h5'
 %h5disp(h5_file)
 
+rgb = [ ...
+    94    79   162
+    50   136   189
+   102   194   165
+   171   221   164
+   230   245   152
+   255   255   191
+   254   224   139
+   253   174    97
+   244   109    67
+   213    62    79
+   158     1    66  ] / 255;
+
 % Get information about the file
 ncinfo(nc_file)
 
@@ -16,8 +29,13 @@ ncinfo(nc_file)
 ncdisp(nc_file);
 
 % Open and read a NC file with particular variable
- hurricane_image = ncread(nc_file,'VSCHN');
- imshow(hurricane_image)
+
+ hurricane_image = ncread(nc_file,'IRWIN');
+ imshow(hurricane_image);
+ colormap(rgb);
+ clim([200 320]);
+ colorbar;
+ 
  hurricane_wind_speed = ncread(nc_file,'WindSpd');
  hurricane_long_cent = ncread(nc_file,'archer_lon');
  hurricane_lat_cent = ncread(nc_file,'archer_lat');
