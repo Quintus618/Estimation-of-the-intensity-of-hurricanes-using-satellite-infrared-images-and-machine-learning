@@ -4,10 +4,14 @@ close all
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PROGRAM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Hurricane localized in the sea
+nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
 
-nc_file = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.15.2100.61.GOE-10.099.hursat-b1.v06.nc'
-%h5_file = './deep-Phurie-master/model/model.h5'
-%h5disp(h5_file)
+% Hurricane where its image has zero pixel intensity
+nc_file_2 = './HURSAT-B1/2005/HURSAT_b1_v06_2005236N23285_KATRINA_c20170721/2005236N23285.KATRINA.2005.08.26.0600.66.GOE-10.057.hursat-b1.v06.nc';
+
+% Hurricen localized after landfall
+nc_file_3 = './HURSAT-B1/2005/HURSAT_b1_v06_2005236N23285_KATRINA_c20170721/2005236N23285.KATRINA.2005.08.29.1500.39.GOE-12.084.hursat-b1.v06.nc';
 
 rgb = [ ...
     94    79   162
@@ -23,23 +27,71 @@ rgb = [ ...
    158     1    66  ] / 255;
 
 % Get information about the file
-ncinfo(nc_file)
+ncinfo(nc_file_1)
 
 % Display the file
-ncdisp(nc_file);
+ncdisp(nc_file_1);
 
 % Open and read a NC file with particular variable
+% satellite IR image of a hurricane where we apply a colormap
+hurricane_IR_image_1 = ncread(nc_file_1,'IRWIN');
+imshow(hurricane_IR_image_1);
+title("IVAN Hurricane IR")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
 
- hurricane_image = ncread(nc_file,'IRWIN');
- imshow(hurricane_image);
- colormap(rgb);
- clim([200 320]);
- colorbar;
- 
- hurricane_wind_speed = ncread(nc_file,'WindSpd');
- hurricane_long_cent = ncread(nc_file,'archer_lon');
- hurricane_lat_cent = ncread(nc_file,'archer_lat');
- hurricane_sat_name = ncreadatt(nc_file,"/","Satellite_Name");
+hurricane_visible_image_1 = ncread(nc_file_1,'VSCHN');
+imshow(hurricane_visible_image_1);
+title("IVAN Hurricane visible")
+figure
+
+
+% Get some precise information about nc file
+hurricane_wind_speed_1 = ncread(nc_file_1,'WindSpd');
+hurricane_long_cent_1 = ncread(nc_file_1,'archer_lon');
+hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
+hurricane_sat_name_1 = ncreadatt(nc_file_1,"/","Satellite_Name");
+
+hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
+imshow(hurricane_IR_image_2);
+title("KATRINA Hurricane IR 1")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
+
+hurricane_visible_image_2 = ncread(nc_file_2,'VSCHN');
+imshow(hurricane_visible_image_2);
+title("KATRINA Hurricane visible 1 zero pixel intensity")
+figure
+
+hurricane_wind_speed_2 = ncread(nc_file_2,'WindSpd');
+hurricane_long_cent_2 = ncread(nc_file_2,'archer_lon');
+hurricane_lat_cent_2 = ncread(nc_file_2,'archer_lat');
+hurricane_sat_name_2 = ncreadatt(nc_file_2,"/","Satellite_Name");
+
+hurricane_IR_image_3 = ncread(nc_file_3,'IRWIN');
+imshow(hurricane_IR_image_3);
+title("KATRINA Hurricane IR landfall")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
+
+hurricane_visible_image_3 = ncread(nc_file_3,'VSCHN');
+imshow(hurricane_visible_image_3);
+title("KATRINA Hurricane visible landfall")
+
+hurricane_wind_speed_3 = ncread(nc_file_3,'WindSpd');
+hurricane_long_cent_3 = ncread(nc_file_3,'archer_lon');
+hurricane_lat_cent_3 = ncread(nc_file_3,'archer_lat');
+hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
+
+% Convolutional neural network trained
+%h5_file = './deep-Phurie-master/model/model.h5'
+%h5disp(h5_file)
 
 % Download HURSAT-B1 dataset from 2004 to 2009
 
