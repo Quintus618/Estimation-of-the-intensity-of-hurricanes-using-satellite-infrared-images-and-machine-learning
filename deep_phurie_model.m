@@ -91,7 +91,8 @@ hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
 
 % Hurricane contours
 annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
-
+figure 
+imshow(cont)
 % Eye of the hurricane
 %annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
 
@@ -137,8 +138,7 @@ function annotated_hurricane_center(image, radius, color, iter, sizemark)
     y0 = round(N/2);
     r = radius;         %radius
     phi0 = levelsetFunction('circular',M,N,x0,y0,r);
-    figure
-    imshow(image)
+    figure, imshow(image)
     hold on
     c = contourc(phi0,[0,0]);
     curveDisplay(c(2,:),c(1,:),color,'MarkerSize',sizemark)
@@ -165,8 +165,7 @@ function annotated_hurricane_center(image, radius, color, iter, sizemark)
         end
 
         c = contourc(phi, [0 0]);
-        figure
-        imshow(image)
+        figure, imshow(image)
         hold on
         curveDisplay(c(2,:),c(1,:),color,'MarkerSize',sizemark)
         hold off
