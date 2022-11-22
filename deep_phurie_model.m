@@ -7,11 +7,16 @@ close all
 % Hurricane localized in the sea
 nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
 
-% Hurricane where its image has zero pixel intensity
+% Hurricane where its image has zero pixel intensity (landfall)
 nc_file_2 = './HURSAT-B1/2005/HURSAT_b1_v06_2005236N23285_KATRINA_c20170721/2005236N23285.KATRINA.2005.08.26.0600.66.GOE-10.057.hursat-b1.v06.nc';
 
 % Hurricen localized after landfall
 nc_file_3 = './HURSAT-B1/2005/HURSAT_b1_v06_2005236N23285_KATRINA_c20170721/2005236N23285.KATRINA.2005.08.29.1500.39.GOE-12.084.hursat-b1.v06.nc';
+
+% IR image with NaN
+nc_file_4 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.18.0600.46.GOE-12.075.hursat-b1.v06.nc';
+
+nc_file_5 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
 
 rgb = [ ...
     94    79   162
@@ -83,18 +88,65 @@ figure
 hurricane_visible_image_3 = ncread(nc_file_3,'VSCHN');
 imshow(hurricane_visible_image_3);
 title("KATRINA Hurricane visible landfall")
+figure
 
 hurricane_wind_speed_3 = ncread(nc_file_3,'WindSpd');
 hurricane_long_cent_3 = ncread(nc_file_3,'archer_lon');
 hurricane_lat_cent_3 = ncread(nc_file_3,'archer_lat');
 hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
 
+hurricane_IR_image_4 = ncread(nc_file_4,'IRWIN');
+imshow(hurricane_IR_image_4);
+title("KEN Hurricane IR landfall")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
+
+hurricane_visible_image_4 = ncread(nc_file_4,'VSCHN');
+imshow(hurricane_visible_image_4);
+title("KEN Hurricane visible landfall")
+
+hurricane_wind_speed_4 = ncread(nc_file_4,'WindSpd');
+hurricane_long_cent_4 = ncread(nc_file_4,'archer_lon');
+hurricane_lat_cent_4 = ncread(nc_file_4,'archer_lat');
+hurricane_sat_name_4 = ncreadatt(nc_file_4,"/","Satellite_Name");
+
+hurricane_IR_image_5 = ncread(nc_file_5,'IRWIN');
+imshow(hurricane_IR_image_5);
+title("KEN Hurricane IR landfall")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
+
+hurricane_visible_image_5 = ncread(nc_file_5,'VSCHN');
+imshow(hurricane_visible_image_5);
+title("KEN Hurricane visible landfall")
+
+hurricane_wind_speed_5 = ncread(nc_file_5,'WindSpd');
+hurricane_long_cent_5 = ncread(nc_file_5,'archer_lon');
+hurricane_lat_cent_5 = ncread(nc_file_5,'archer_lat');
+hurricane_sat_name_5 = ncreadatt(nc_file_5,"/","Satellite_Name");
+
 % Hurricane contours
-annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
-figure 
-imshow(cont)
+%annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
+
 % Eye of the hurricane
 %annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
+
+% Test detection of zero pixel intensity and negative pixels
+detected_1 = pixel_treatment(hurricane_IR_image_1, hurricane_visible_image_1);
+detected_2 = pixel_treatment(hurricane_IR_image_2, hurricane_visible_image_2);
+detected_3 = pixel_treatment(hurricane_IR_image_3, hurricane_visible_image_3);
+detected_4 = pixel_treatment(hurricane_IR_image_4, hurricane_visible_image_4); % problem
+detected_5 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_5);
+
+d_1 = remove_landfall(hurricane_IR_image_1);
+d_2 = remove_landfall(hurricane_IR_image_2);
+d_3 = remove_landfall(hurricane_IR_image_3);
+d_4 = remove_landfall(hurricane_IR_image_4);
+d_5 = remove_landfall(hurricane_IR_image_5);
 
 % Convolutional neural network trained
 %h5_file = './deep-Phurie-master/model/model.h5'
@@ -175,23 +227,44 @@ end
 % Detect and remove landfall image
 % return True if landfall is detected
 function detected = remove_landfall(image)
+    meanIntensity = mean(image(:));
+    stdIntensity = std(image(:));
+    disp(meanIntensity)
+    disp(stdIntensity) % interesting point to detect landfall
+    if stdIntensity <= 26
+        detected = true
+    else
+        detected = false
+    end
 end
 
 % Detect and remove zero pixel intensity and negative pixel in an image
 % if detected, return True
-function detected = pixel_treatment(image)
+function detected = pixel_treatment(image_IR, image_visible)
+    min_visible = min(image_IR(:));
+
+    if min_visible <= 0 
+        detected = true;
+    else
+        detected = false;
+    end
+
 end
 
 % preprocessing phase
 function preprocessed_data = preprocessing()
 
+    number_good_image = 0;
+
     % Browse folders and select each file
     
         % remove images with zero pixel intensity and negative pixels
+        detected = pixel_treatment(image_IR, image_visible)
+        if detected == false
+            number_good_image = number_good_image + 1;
+        end
     
         % remove images with landfall
-    
-        % filter only images taken by GOES 12
     
         % resize image
     
