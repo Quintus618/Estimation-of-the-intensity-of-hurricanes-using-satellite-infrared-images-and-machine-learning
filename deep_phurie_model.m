@@ -206,7 +206,42 @@ d_6 = remove_landfall(hurricane_CO_image_6);
 % Fill each folder with respective hurricanes data
 % Extract hurricane data
 % WARNING : the size of the dataset is 21Go
-function download_HURSAT_B1()
+% example usage :
+% download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/",
+%                       2004, 2009, "C:\Users\...\");
+function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
+    %base_url="https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/";
+    %base_year = 2004;
+    years_apart = last_year - base_year;
+
+    %folder_path = "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\";
+    for i = 0:years_apart
+        year = base_year + i;
+        if ~exist(strcat(folder_path, num2str(year)), 'dir')
+            mkdir(folder_path, num2str(year));
+        end
+    
+        fprintf('it=%i\n', i);
+        url=strcat(base_url, num2str(year));
+        url=strcat(url, '/');
+        raw = webread(url);
+    
+        out = regexp(raw, '<a href="HURSAT[^<]*\.tar\.gz">', "match");
+        for j=1:length(out)
+            current_file = char(extractBetween(out{j}, '<a href="', '">'));
+            file_url = strcat(url, current_file);
+            save_path = strcat(folder_path, num2str(year));
+            save_path = strcat(save_path, '\');
+            save_path = strcat(save_path, current_file);
+            websave(save_path, file_url)
+            current_folder = strcat(folder_path, num2str(year), '\', extractBefore(current_file, ".tar.gz"));
+            if ~exist(current_folder, 'dir')
+                mkdir(current_folder);
+            end
+            untar(save_path, current_folder);
+            delete(save_path);
+        end
+    end
 end
 
 % Annotate the center of the hurricane
