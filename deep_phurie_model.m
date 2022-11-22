@@ -16,7 +16,10 @@ nc_file_3 = './HURSAT-B1/2005/HURSAT_b1_v06_2005236N23285_KATRINA_c20170721/2005
 % IR image with NaN
 nc_file_4 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.18.0600.46.GOE-12.075.hursat-b1.v06.nc';
 
+% sea
 nc_file_5 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
+
+nc_file_6 = './HURSAT-B1/2007/HURSAT_b1_v06_2007244N12303_FELIX_c20170721/2007244N12303.FELIX.2007.09.04.0300.18.GOE-12.110.hursat-b1.v06.nc';
 
 rgb = [ ...
     94    79   162
@@ -40,6 +43,7 @@ ncdisp(nc_file_1);
 % Open and read a NC file with particular variable
 % satellite IR image of a hurricane where we apply a colormap
 hurricane_IR_image_1 = ncread(nc_file_1,'IRWIN');
+hurricane_CO_image_1 = ncread(nc_file_1,'IRCO2');
 imshow(hurricane_IR_image_1);
 title("IVAN Hurricane IR")
 colormap(rgb);
@@ -60,6 +64,7 @@ hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
 hurricane_sat_name_1 = ncreadatt(nc_file_1,"/","Satellite_Name");
 
 hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
+hurricane_CO_image_2 = ncread(nc_file_2,'IRWVP');
 imshow(hurricane_IR_image_2);
 title("KATRINA Hurricane IR 1")
 colormap(rgb);
@@ -78,6 +83,7 @@ hurricane_lat_cent_2 = ncread(nc_file_2,'archer_lat');
 hurricane_sat_name_2 = ncreadatt(nc_file_2,"/","Satellite_Name");
 
 hurricane_IR_image_3 = ncread(nc_file_3,'IRWIN');
+hurricane_CO_image_3 = ncread(nc_file_3,'IRCO2');
 imshow(hurricane_IR_image_3);
 title("KATRINA Hurricane IR landfall")
 colormap(rgb);
@@ -113,6 +119,7 @@ hurricane_lat_cent_4 = ncread(nc_file_4,'archer_lat');
 hurricane_sat_name_4 = ncreadatt(nc_file_4,"/","Satellite_Name");
 
 hurricane_IR_image_5 = ncread(nc_file_5,'IRWIN');
+hurricane_CO_image_5 = ncread(nc_file_5,'IRCO2');
 imshow(hurricane_IR_image_5);
 title("KEN Hurricane IR landfall")
 colormap(rgb);
@@ -123,11 +130,32 @@ figure
 hurricane_visible_image_5 = ncread(nc_file_5,'VSCHN');
 imshow(hurricane_visible_image_5);
 title("KEN Hurricane visible landfall")
+figure
 
 hurricane_wind_speed_5 = ncread(nc_file_5,'WindSpd');
 hurricane_long_cent_5 = ncread(nc_file_5,'archer_lon');
 hurricane_lat_cent_5 = ncread(nc_file_5,'archer_lat');
 hurricane_sat_name_5 = ncreadatt(nc_file_5,"/","Satellite_Name");
+
+hurricane_IR_image_6 = ncread(nc_file_6,'IRWIN');
+hurricane_CO_image_6 = ncread(nc_file_6,'IRCO2');
+imshow(hurricane_IR_image_6);
+title("FELIX Hurricane IR")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+figure
+
+hurricane_visible_image_6 = ncread(nc_file_6,'VSCHN');
+imshow(hurricane_visible_image_6);
+title("FELIX Hurricane visible")
+
+
+% Get some precise information about nc file
+hurricane_wind_speed_6 = ncread(nc_file_6,'WindSpd');
+hurricane_long_cent_6 = ncread(nc_file_6,'archer_lon');
+hurricane_lat_cent_6 = ncread(nc_file_6,'archer_lat');
+hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 
 % Hurricane contours
 %annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
@@ -136,17 +164,19 @@ hurricane_sat_name_5 = ncreadatt(nc_file_5,"/","Satellite_Name");
 %annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
 
 % Test detection of zero pixel intensity and negative pixels
-detected_1 = pixel_treatment(hurricane_IR_image_1, hurricane_visible_image_1);
-detected_2 = pixel_treatment(hurricane_IR_image_2, hurricane_visible_image_2);
-detected_3 = pixel_treatment(hurricane_IR_image_3, hurricane_visible_image_3);
-detected_4 = pixel_treatment(hurricane_IR_image_4, hurricane_visible_image_4); % problem
-detected_5 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_5);
+%detected_1 = pixel_treatment(hurricane_IR_image_1, hurricane_visible_image_1);
+%detected_2 = pixel_treatment(hurricane_IR_image_2, hurricane_visible_image_2);
+%detected_3 = pixel_treatment(hurricane_IR_image_3, hurricane_visible_image_3);
+%detected_4 = pixel_treatment(hurricane_IR_image_4, hurricane_visible_image_4); % problem
+%detected_5 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_5);
+detected_6 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_6);
 
-d_1 = remove_landfall(hurricane_IR_image_1);
-d_2 = remove_landfall(hurricane_IR_image_2);
-d_3 = remove_landfall(hurricane_IR_image_3);
-d_4 = remove_landfall(hurricane_IR_image_4);
-d_5 = remove_landfall(hurricane_IR_image_5);
+d_1 = remove_landfall(hurricane_CO_image_1);
+%d_2 = remove_landfall(hurricane_CO_image_2);
+d_3 = remove_landfall(hurricane_CO_image_3);
+%d_4 = remove_landfall(hurricane_IR_image_4);
+d_5 = remove_landfall(hurricane_CO_image_5);
+d_6 = remove_landfall(hurricane_CO_image_6);
 
 % Convolutional neural network trained
 %h5_file = './deep-Phurie-master/model/model.h5'
@@ -229,9 +259,9 @@ end
 function detected = remove_landfall(image)
     meanIntensity = mean(image(:));
     stdIntensity = std(image(:));
-    disp(meanIntensity)
-    disp(stdIntensity) % interesting point to detect landfall
-    if stdIntensity <= 26
+    disp("Moyenne: " + meanIntensity)
+    disp("Ecart-type: " + stdIntensity) % interesting point to detect landfall
+    if stdIntensity <= 20.4
         detected = true
     else
         detected = false
@@ -242,8 +272,10 @@ end
 % if detected, return True
 function detected = pixel_treatment(image_IR, image_visible)
     min_visible = min(image_IR(:));
-
-    if min_visible <= 0 
+    test_NaN = anynan(image_IR);
+    disp("Valeur min: " + min_visible)
+    disp("Présence NaN: " + test_NaN)
+    if min_visible <= 120 || test_NaN == 1
         detected = true;
     else
         detected = false;
