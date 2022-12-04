@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "OctaveDebugger",
+            "name": "Run Matlab script",
+            "request": "launch",
+            "preLaunchTask": "run_matlab",
+            "program": "cmd.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+        }        
+    ],
+    "compounds": []
+}
