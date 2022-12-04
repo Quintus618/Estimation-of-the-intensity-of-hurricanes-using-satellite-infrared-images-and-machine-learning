@@ -171,12 +171,20 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %detected_5 = pixel_treatment(hurricane_IR_image_5);
 detected_6 = pixel_treatment(hurricane_IR_image_5);
 
-d_1 = remove_landfall(hurricane_CO_image_1);
+%d_1 = remove_landfall(hurricane_CO_image_1);
 %d_2 = remove_landfall(hurricane_CO_image_2);
-d_3 = remove_landfall(hurricane_CO_image_3);
+%d_3 = remove_landfall(hurricane_CO_image_3);
 %d_4 = remove_landfall(hurricane_IR_image_4);
-d_5 = remove_landfall(hurricane_CO_image_5);
-d_6 = remove_landfall(hurricane_CO_image_6);
+%d_5 = remove_landfall(hurricane_CO_image_5);
+%d_6 = remove_landfall(hurricane_CO_image_6);
+
+d_1 = remove_landfall2(hurricane_lat_cent_1,hurricane_long_cent_1)
+d_2 = remove_landfall2(hurricane_lat_cent_2,hurricane_long_cent_2)
+d_3 = remove_landfall2(hurricane_lat_cent_3,hurricane_long_cent_3)
+d_4 = remove_landfall2(hurricane_lat_cent_4,hurricane_long_cent_4)
+d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
+d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
+
 
 % Convolutional neural network trained
 %h5_file = './deep-Phurie-master/model/model.h5'
@@ -323,6 +331,21 @@ function detected = remove_landfall(image)
     end
 end
 
+% Function that detects if the hurricane is in the sea or on the land thanks to longitude and latitude of the hurricane
+% return True if the hurricane is in the land
+function detected = remove_landfall2(latitude, longitude)
+    
+    land = landmask(latitude,longitude) 
+
+    if land == 1 % 1 if the hurricane is in the land
+        detected = true
+    else
+        detected = false
+    end
+    
+end
+
+
 % Detect and remove zero pixel intensity and negative pixel in an image
 % if detected, return True
 function detected = pixel_treatment(image_IR)
@@ -353,6 +376,7 @@ function preprocessed_data = preprocessing()
     %}
     
     % get each year folders
+    %{
     year_folders = ls;
     for element in year_folders
         % checking if element is a folder
@@ -389,6 +413,7 @@ function preprocessed_data = preprocessing()
     % print for each year, the number of good images
     disp("Year: " + year)
     disp("Number of good images:" + number_good_image)
+    %}
 
     
         % add image to the dataset
@@ -416,7 +441,8 @@ function [layers, options] = convo_neural_network()
     options = trainingOptions('adam', 'OutputFcn', 'TrainingRMSE', 'MaxEpochs', 1000);
 end
 
-% TODO : Hyperparameter tuning for the CNN
+% Hyperparameter tuning for the CNN to find the best parameters
+
 
 
 
