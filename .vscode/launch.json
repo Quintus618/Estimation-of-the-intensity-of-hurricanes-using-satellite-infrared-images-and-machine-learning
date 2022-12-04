@@ -8,7 +8,7 @@
             "preLaunchTask": "run_matlab",
             "program": "cmd.exe",
             "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
+            "console": "internalConsole"
         }        
     ],
     "compounds": []

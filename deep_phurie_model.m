@@ -164,12 +164,12 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
 
 % Test detection of zero pixel intensity and negative pixels
-%detected_1 = pixel_treatment(hurricane_IR_image_1, hurricane_visible_image_1);
-%detected_2 = pixel_treatment(hurricane_IR_image_2, hurricane_visible_image_2);
-%detected_3 = pixel_treatment(hurricane_IR_image_3, hurricane_visible_image_3);
-%detected_4 = pixel_treatment(hurricane_IR_image_4, hurricane_visible_image_4); % problem
-%detected_5 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_5);
-detected_6 = pixel_treatment(hurricane_IR_image_5, hurricane_visible_image_6);
+%detected_1 = pixel_treatment(hurricane_IR_image_1);
+%detected_2 = pixel_treatment(hurricane_IR_image_2);
+%detected_3 = pixel_treatment(hurricane_IR_image_3);
+%detected_4 = pixel_treatment(hurricane_IR_image_4); % problem
+%detected_5 = pixel_treatment(hurricane_IR_image_5);
+detected_6 = pixel_treatment(hurricane_IR_image_5);
 
 d_1 = remove_landfall(hurricane_CO_image_1);
 %d_2 = remove_landfall(hurricane_CO_image_2);
@@ -183,13 +183,16 @@ d_6 = remove_landfall(hurricane_CO_image_6);
 %h5disp(h5_file)
 
 % Download HURSAT-B1 dataset from 2004 to 2009
+%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2004, 2009, "./HURSAT_B1/")
 
 % Filter the dataset (preprocessing)
+%preprocessing()
 
 % Split into training set and test set
 
-% Model
 
+% Model
+%[layers, options] = convo_neural_network()
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,30 +218,47 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
     years_apart = last_year - base_year;
 
     %folder_path = "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\";
+    % TODO check if file already downloaded
+
+    % creates the base folder of the dataset if it doesn't already exists 
+    if ~exist(strcat(folder_path, pathsep, 'HURSAT-B1'))
+        mkdir(folder_path, 'HURSAT-B1');
+    end
+    folder_path = strcat(folder_path, pathsep, 'HURSAT-B1');
+
     for i = 0:years_apart
         year = base_year + i;
-        if ~exist(strcat(folder_path, num2str(year)), 'dir')
+        % creates a folder for each year
+        if ~exist(strcat(folder_path, pathsep, num2str(year)), 'dir')
             mkdir(folder_path, num2str(year));
         end
     
-        fprintf('it=%i\n', i);
+        %fprintf('it=%i\n', i);
+        
+        % reads the raw content of the dataset webpage
         url=strcat(base_url, num2str(year));
         url=strcat(url, '/');
         raw = webread(url);
     
+        % extracts each download link on the webpage
         out = regexp(raw, '<a href="HURSAT[^<]*\.tar\.gz">', "match");
         for j=1:length(out)
+            % downloads each archive
             current_file = char(extractBetween(out{j}, '<a href="', '">'));
             file_url = strcat(url, current_file);
             save_path = strcat(folder_path, num2str(year));
-            save_path = strcat(save_path, '\');
+            save_path = strcat(save_path, pathsep);
             save_path = strcat(save_path, current_file);
             websave(save_path, file_url)
-            current_folder = strcat(folder_path, num2str(year), '\', extractBefore(current_file, ".tar.gz"));
+
+            % creates a folder for each hurricane
+            current_folder = strcat(folder_path, num2str(year), pathsep, extractBefore(current_file, ".tar.gz"));
             if ~exist(current_folder, 'dir')
                 mkdir(current_folder);
             end
+            % extracts the content of each archive
             untar(save_path, current_folder);
+            % deletes each archive once extracted to free the space
             delete(save_path);
         end
     end
@@ -294,8 +314,8 @@ end
 function detected = remove_landfall(image)
     meanIntensity = mean(image(:));
     stdIntensity = std(image(:));
-    disp("Moyenne: " + meanIntensity)
-    disp("Ecart-type: " + stdIntensity) % interesting point to detect landfall
+    disp("Mean: " + meanIntensity)
+    disp("Standard deviation: " + stdIntensity) % interesting point to detect landfall
     if stdIntensity <= 20.4
         detected = true
     else
@@ -305,7 +325,7 @@ end
 
 % Detect and remove zero pixel intensity and negative pixel in an image
 % if detected, return True
-function detected = pixel_treatment(image_IR, image_visible)
+function detected = pixel_treatment(image_IR)
     min_visible = min(image_IR(:));
     test_NaN = anynan(image_IR);
     disp("Valeur min: " + min_visible)
@@ -315,7 +335,6 @@ function detected = pixel_treatment(image_IR, image_visible)
     else
         detected = false;
     end
-
 end
 
 % preprocessing phase
@@ -323,27 +342,82 @@ function preprocessed_data = preprocessing()
 
     number_good_image = 0;
 
-    % Browse folders and select each file
+    % Browse HURSAT-B1 folders and browse each hurricane folder
+    folder_path = '\'
+    %{
+    for year = 2004:2009
+        if exist(strcat(folder_path, num2str(year)), 'dir')
+            year_folders = dir
+        end
+    end
+    %}
     
+    % get each year folders
+    year_folders = ls;
+    for element in year_folders
+        % checking if element is a folder
+        if exist(element, 'dir')
+            
+        end
+    end
+
+    % For each file, apply the preprocessing
+
+        hurricane_IR_image = ncread(nc_file,'IRWIN');
+
         % remove images with zero pixel intensity and negative pixels
-        detected = pixel_treatment(image_IR, image_visible)
+        detected = pixel_treatment(hurricane_IR_image)
         if detected == false
             number_good_image = number_good_image + 1;
+        else 
+            continue;
+        end
         end
     
         % remove images with landfall
+        detected_land = remove_landfall(hurricane_IR_image)
+        if detected == false
+            number_good_image = number_good_image + 1;
+        else
+            continue;
+        end
+        end
     
         % resize image
+        image_IR = imresize(hurricane_IR_image, [224, 224]);
+
+    % print for each year, the number of good images
+    disp("Year: " + year)
+    disp("Number of good images:" + number_good_image)
+
     
-        % add image to preprocessed_data
+        % add image to the dataset
 end
 
 % Convolutional Neural Network
-function model = convo_neural_network()
+function [layers, options] = convo_neural_network()
     layers = [
-        
+        imageInputLayer([224, 224, 1])
+        convolution2dLayer(5, 32)
+        maxPooling2dLayer(5, 'Stride', 2)
+        convolution2dLayer(3, 64)
+        maxPooling2dLayer(3, 'Stride', 2)
+        convolution2dLayer(3, 64)
+        maxPooling2dLayer(3, 'Stride', 1)
+        convolution2dLayer(3, 64)
+        maxPooling2dLayer(3, 'Stride', 1)
+        convolution2dLayer(3, 128)
+        maxPooling2dLayer(3, 'Stride', 1)
+        convolution2dLayer(3, 128)
+        maxPooling2dLayer(3, 'Stride', 1)
+        fullyConnectedLayer(512)
+        fullyConnectedLayer(64)
     ]
+    options = trainingOptions('adam', 'OutputFcn', 'TrainingRMSE', 'MaxEpochs', 1000);
 end
+
+% TODO : Hyperparameter tuning for the CNN
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

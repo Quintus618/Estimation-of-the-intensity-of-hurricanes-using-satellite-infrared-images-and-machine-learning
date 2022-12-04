@@ -6,7 +6,8 @@
         {
             "label": "run_matlab",
             "type": "shell",
-            "command": "matlab -nosplash -nodesktop -r 'run ./deep_phurie_model.m; quit;'"
+            "command": "matlab -nosplash -nodesktop -r 'run ./deep_phurie_model.m; quit;'",
+            
         }
     ]
 }
