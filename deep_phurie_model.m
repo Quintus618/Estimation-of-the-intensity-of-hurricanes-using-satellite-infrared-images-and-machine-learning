@@ -443,6 +443,53 @@ end
 
 % Hyperparameter tuning for the CNN to find the best parameters
 
+% To see in the preprocessing phase
+% train/test split according to the year when the hurricane occurred
+function [training_set, test_set] = traintestsplityear(preprocessed_data,year)
+    % browse the dataset
+    % if the year of the hurricane is equal to the year given in parameter, add it to the test set
+    % else add it to the train set
+    for i = 1:size(preprocessed_data)
+        if preprocessed_data(i).year == year
+            test_set = [test_set, preprocessed_data(i)]
+        else
+            training_set = [training_set, preprocessed_data(i)]
+        end
+    end
+end
+
+% train/test split according a percentage of the dataset
+function [training_set, test_set] = traintestsplit(preprocessed_data, training_percentage)
+    % get the number of images in the dataset
+    number_images = size(preprocessed_data, 2);
+
+    % get the number of images in the training set
+    number_training_images = round(number_images * training_percentage);
+
+    % get the number of images in the test set
+    number_test_images = number_images - number_training_images;
+
+    % get the training set
+    training_set = preprocessed_data(1:number_training_images);
+
+    % get the test set
+    test_set = preprocessed_data(number_training_images+1:end);
+end
+
+
+% train the CNN
+function trained_network = train_cnn(layers, options, preprocessed_data)
+    trained_network = trainNetwork(preprocessed_data, layers, options);
+end
+
+% test the CNN according to the test dataset
+function test_cnn(trained_network, test_dataset)
+    Y_pred = classify(trained_network, test_dataset);
+    %YTest = test_dataset.Labels;
+    accuracy = sum(YPred == YTest)/numel(YTest)
+end
+
+
 
 
 
