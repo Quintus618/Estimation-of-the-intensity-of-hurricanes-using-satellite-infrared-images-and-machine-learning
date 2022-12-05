@@ -478,8 +478,8 @@ end
 
 
 % train the CNN
-function trained_network = train_cnn(layers, options, preprocessed_data)
-    trained_network = trainNetwork(preprocessed_data, layers, options);
+function trained_network = train_cnn(layers, options, training_set)
+    trained_network = trainNetwork(training_set, layers, options);
 end
 
 % test the CNN according to the test dataset
