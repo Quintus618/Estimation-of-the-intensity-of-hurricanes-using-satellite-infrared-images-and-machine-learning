@@ -209,7 +209,7 @@ title("IVAN Hurricane IR modified")
 %h5disp(h5_file)
 
 % Download HURSAT-B1 dataset from 2004 to 2009
-%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2004, 2009, "./HURSAT_B1/")
+download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2010, 2010, ".")
 
 % Filter the dataset (preprocessing)
 %preprocessing()
@@ -251,6 +251,7 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
         mkdir(folder_path, 'HURSAT-B1');
     end
     folder_path = strcat(folder_path, filesep, 'HURSAT-B1');
+    folder_path=strcat(folder_path, '/');
 
     for i = 0:years_apart
         year = base_year + i;
@@ -271,7 +272,7 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
         for j=1:length(out)
             % downloads each archive
             current_file = char(extractBetween(out{j}, '<a href="', '">'));
-            file_url = strcat(url, current_file);
+            file_url = strcat(url, current_file)
             save_path = strcat(folder_path, num2str(year));
             save_path = strcat(save_path, filesep);
             save_path = strcat(save_path, current_file);
@@ -720,14 +721,17 @@ function modified_image = translate_flip_rotate_crop(image)
     random_number = rand();
 
     % if the random number is less than 0.3, translate the image
-    if random_number < 0.3
+    if random_number < 0.9
         % get a random number between -10 and 10
-        random_number = randi([-5, 5]);
+        random_number = randi([-5, -5]);
 
         % translate the image using imtranslate and cut the image of random_number pixels
         modified_image = imtranslate(image, [random_number, random_number], 'FillValues', 0);
-        modified_image = imcrop(modified_image, [abs(random_number) + 1, abs(random_number) + 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
-
+        if random_number >=0
+            modified_image = imcrop(modified_image, [abs(random_number) + 1, abs(random_number) + 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
+        else
+            modified_image = imcrop(modified_image, [1, 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
+        end
         disp("Translated image of " + random_number + " pixels")
 
 
