@@ -63,6 +63,7 @@ hurricane_long_cent_1 = ncread(nc_file_1,'archer_lon');
 hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
 hurricane_sat_name_1 = ncreadatt(nc_file_1,"/","Satellite_Name");
 
+%{
 hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
 hurricane_CO_image_2 = ncread(nc_file_2,'IRWVP');
 imshow(hurricane_IR_image_2);
@@ -70,7 +71,7 @@ title("KATRINA Hurricane IR 1")
 colormap(rgb);
 clim([200 320]);
 colorbar;
-figure
+
 
 hurricane_visible_image_2 = ncread(nc_file_2,'VSCHN');
 imshow(hurricane_visible_image_2);
@@ -81,6 +82,7 @@ hurricane_wind_speed_2 = ncread(nc_file_2,'WindSpd');
 hurricane_long_cent_2 = ncread(nc_file_2,'archer_lon');
 hurricane_lat_cent_2 = ncread(nc_file_2,'archer_lat');
 hurricane_sat_name_2 = ncreadatt(nc_file_2,"/","Satellite_Name");
+%}
 
 hurricane_IR_image_3 = ncread(nc_file_3,'IRWIN');
 hurricane_CO_image_3 = ncread(nc_file_3,'IRCO2');
@@ -101,6 +103,7 @@ hurricane_long_cent_3 = ncread(nc_file_3,'archer_lon');
 hurricane_lat_cent_3 = ncread(nc_file_3,'archer_lat');
 hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
 
+%{
 hurricane_IR_image_4 = ncread(nc_file_4,'IRWIN');
 imshow(hurricane_IR_image_4);
 title("KEN Hurricane IR landfall")
@@ -156,6 +159,7 @@ hurricane_wind_speed_6 = ncread(nc_file_6,'WindSpd');
 hurricane_long_cent_6 = ncread(nc_file_6,'archer_lon');
 hurricane_lat_cent_6 = ncread(nc_file_6,'archer_lat');
 hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
+%}
 
 % Hurricane contours
 %annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
@@ -169,7 +173,7 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %detected_3 = pixel_treatment(hurricane_IR_image_3);
 %detected_4 = pixel_treatment(hurricane_IR_image_4); % problem
 %detected_5 = pixel_treatment(hurricane_IR_image_5);
-detected_6 = pixel_treatment(hurricane_IR_image_5);
+%detected_6 = pixel_treatment(hurricane_IR_image_5);
 
 %d_1 = remove_landfall(hurricane_CO_image_1);
 %d_2 = remove_landfall(hurricane_CO_image_2);
@@ -178,12 +182,21 @@ detected_6 = pixel_treatment(hurricane_IR_image_5);
 %d_5 = remove_landfall(hurricane_CO_image_5);
 %d_6 = remove_landfall(hurricane_CO_image_6);
 
-d_1 = remove_landfall2(hurricane_lat_cent_1,hurricane_long_cent_1)
-d_2 = remove_landfall2(hurricane_lat_cent_2,hurricane_long_cent_2)
-d_3 = remove_landfall2(hurricane_lat_cent_3,hurricane_long_cent_3)
-d_4 = remove_landfall2(hurricane_lat_cent_4,hurricane_long_cent_4)
-d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
-d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
+%d_1 = remove_landfall2(hurricane_lat_cent_1,hurricane_long_cent_1)
+%d_2 = remove_landfall2(hurricane_lat_cent_2,hurricane_long_cent_2)
+%d_3 = remove_landfall2(hurricane_lat_cent_3,hurricane_long_cent_3)
+%d_4 = remove_landfall2(hurricane_lat_cent_4,hurricane_long_cent_4)
+%d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
+%d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
+
+colorized_image_1 = colorize(hurricane_IR_image_1)
+imshow(colorized_image_1);
+title("IVAN Hurricane IR colorized")
+figure
+
+colorized_image_3 = colorize(hurricane_IR_image_3)
+imshow(colorized_image_3);
+title("IVAN Hurricane IR colorized")
 
 
 % Convolutional neural network trained
@@ -379,6 +392,7 @@ end
 function preprocessed_data = preprocessing()
 
     number_good_image = 0;
+    number_good_image_by_year = 0;
 
     folder_path = "HURSAT-B1"; % set as param ?
 
@@ -386,6 +400,7 @@ function preprocessed_data = preprocessing()
     
     for i = 1:length(years_folder)
         current_year_folder_str = string(years_folder(i));
+        number_good_image_by_year=0;
         if isfolder(strcat(folder_path, filesep, current_year_folder_str))
             current_year_folder = getFiles(strcat(folder_path, filesep, current_year_folder_str), true);
             current_year_folder_str = strcat(folder_path, filesep, current_year_folder_str);
@@ -400,77 +415,57 @@ function preprocessed_data = preprocessing()
                         nc_file = strcat(current_hurr_folder_str, filesep, current_hurr_str);
                         %disp(current_hurr_str);
 
-                        hurricane_IR_image = ncread(nc_file,'IRWIN');
+                        hurricane_IR_image = ncread(nc_file,'IRWIN');      % X
+                        hurricane_visible_image = ncread(nc_file,'VSCHN');
+                        hurricane_wind_speed = ncread(nc_file,'WindSpd');  % Y
+                        hurricane_long_cent = ncread(nc_file,'archer_lon');
+                        hurricane_lat_cent = ncread(nc_file,'archer_lat');
 
                         % remove images with zero pixel intensity and negative pixels
-                        detected = pixel_treatment(hurricane_IR_image)
+                        detected = pixel_treatment(hurricane_IR_image);
                         if detected == false
                             number_good_image = number_good_image + 1;
+                            number_good_image_by_year = number_good_image_by_year + 1;
                         else 
                             continue;
                         end
                         
                     
                         % remove images with landfall
-                        detected_land = remove_landfall(hurricane_IR_image)
+                        detected_land = remove_landfall(hurricane_IR_image);
                         if detected == false
                             number_good_image = number_good_image + 1;
+                            number_good_image_by_year = number_good_image_by_year + 1;
                         else
                             continue;
                         end
                         
                     
                         % resize image
-                        image_IR = imresize(hurricane_IR_image, [224, 224]);
-                
-                        % print for each year, the number of good images
-                        disp("Year: " + year)
-                        disp("Number of good images:" + number_good_image)
+                        image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
+
+                        % add data to dataset
+                        % X : IR image
+                        % y : wind speed
+                        % FILE .nc4 if it is possible
+          
                     end
                 end
             end
         end
+
+        % print for each year, the number of good images
+        disp("Year: " + year)
+        disp("Number of good images:" + number_good_image_by_year)
     end
     
-
-    % For each file, apply the preprocessing
-    %{
-        hurricane_IR_image = ncread(nc_file,'IRWIN');
-
-        % remove images with zero pixel intensity and negative pixels
-        detected = pixel_treatment(hurricane_IR_image)
-        if detected == false
-            number_good_image = number_good_image + 1;
-        else 
-            continue;
-        end
-        end
-    
-        % remove images with landfall
-        detected_land = remove_landfall(hurricane_IR_image)
-        if detected == false
-            number_good_image = number_good_image + 1;
-        else
-            continue;
-        end
-        end
-    
-        % resize image
-        image_IR = imresize(hurricane_IR_image, [224, 224]);
-
-    % print for each year, the number of good images
-    disp("Year: " + year)
-    disp("Number of good images:" + number_good_image)
-    %}
-
-    
-        % add image to the dataset
+    disp("Total number of good images: " + number_good_image)
 end
 
 % Convolutional Neural Network
 function [layers, options] = convo_neural_network()
     layers = [
-        imageInputLayer([224, 224, 1])
+        imageInputLayer([224, 224, 3]) % 1 : grayscale image 3: RGB image
         convolution2dLayer(5, 32)
         maxPooling2dLayer(5, 'Stride', 2)
         convolution2dLayer(3, 64)
@@ -536,6 +531,180 @@ function test_cnn(trained_network, test_dataset)
     %YTest = test_dataset.Labels;
     accuracy = sum(YPred == YTest)/numel(YTest)
 end
+
+% plot outputs of each layer of our CNN architecture
+function plot_cnn(trained_network, test_dataset)
+    % get the first image of the test dataset
+    img = readimage(test_dataset, 1);
+
+    % get the first image of the test dataset
+    label = test_dataset.Labels(1);
+
+    % get the output of each layer
+    layer_1 = 'conv_1';
+    conv1Features = activations(trained_network, img, layer_1);
+
+    layer_2 = 'maxpool_1';
+    maxpool1Features = activations(trained_network, img, layer_2);
+
+    layer_3 = 'conv_2';
+    conv2Features = activations(trained_network, img, layer_3);
+
+    layer_4 = 'maxpool_2';
+    maxpool2Features = activations(trained_network, img, layer_4);
+
+    layer_5 = 'conv_3';
+    conv3Features = activations(trained_network, img, layer_5);
+
+    layer_6 = 'maxpool_3';
+    maxpool3Features = activations(trained_network, img, layer_6);
+
+    layer_7 = 'conv_4';
+    conv4Features = activations(trained_network, img, layer_7);
+
+    layer_8 = 'maxpool_4';
+    maxpool4Features = activations(trained_network, img, layer_8);
+
+    layer_9 = 'conv_5';
+    conv5Features = activations(trained_network, img, layer_9);
+
+    layer_10 = 'maxpool_5';
+    maxpool5Features = activations(trained_network, img, layer_10);
+
+    layer_11 = 'conv_6';
+    conv6Features = activations(trained_network, img, layer_11);
+
+    layer_12 = 'maxpool_6';
+    maxpool6Features = activations(trained_network, img, layer_12);
+
+    layer_13 = 'fc_1';
+    fc1Features = activations(trained_network, img, layer_13);
+
+    layer_14 = 'fc_2';
+    fc2Features = activations(trained_network, img, layer_14);
+
+    % plot the output of each layer
+    figure
+    subplot(4,4,1)
+    montage(conv1Features,'Size',[4 8])
+    title('conv1Features')
+
+    subplot(4,4,2)
+    montage(maxpool1Features,'Size',[4 8])
+    title('maxpool1Features')
+
+    subplot(4,4,3)
+    montage(conv2Features,'Size',[4 8])
+    title('conv2Features')
+
+    subplot(4,4,4)
+    montage(maxpool2Features,'Size',[4 8])
+
+    subplot(4,4,5)
+    montage(conv3Features,'Size',[4 8])
+    title('conv3Features')
+
+    subplot(4,4,6)
+    montage(maxpool3Features,'Size',[4 8])
+    title('maxpool3Features')
+
+    subplot(4,4,7)
+    montage(conv4Features,'Size',[4 8])
+    title('conv4Features')
+
+    subplot(4,4,8)
+    montage(maxpool4Features,'Size',[4 8])
+    title('maxpool4Features')
+
+    subplot(4,4,9)
+    montage(conv5Features,'Size',[4 8])
+    title('conv5Features')
+
+    subplot(4,4,10)
+    montage(maxpool5Features,'Size',[4 8])
+    title('maxpool5Features')
+
+    subplot(4,4,11)
+    montage(conv6Features,'Size',[4 8])
+    title('conv6Features')
+
+    subplot(4,4,12)
+    montage(maxpool6Features,'Size',[4 8])
+    title('maxpool6Features')
+
+    subplot(4,4,13)
+    montage(fc1Features,'Size',[4 8])
+    title('fc1Features')
+
+    subplot(4,4,14)
+    montage(fc2Features,'Size',[4 8])
+    title('fc2Features')
+
+    subplot(4,4,15)
+    imshow(img)
+    title(label)
+
+    colormap autumn
+
+end
+
+% colorize an IR image with Kelvin color scale
+function colorized_image = colorize(image)
+    % get the min and max values of the image
+    min_value = min(image(:));
+    max_value = max(image(:));
+
+    % get the number of rows and columns of the image
+    [rows, columns] = size(image);
+
+    % create a new image with the same size of the original image
+    colorized_image = zeros(rows, columns, 3);
+
+    % browse the image
+    for i = 1:rows
+        for j = 1:columns
+            % get the value of the pixel
+            value = image(i, j);
+
+            % get the color of the pixel according to the Kelvin color scale
+            color = kelvin_color_scale(value, min_value, max_value);
+
+            % set the color of the pixel in the new image
+            colorized_image(i, j, 1) = color(1);
+            colorized_image(i, j, 2) = color(2);
+            colorized_image(i, j, 3) = color(3);
+        end
+    end
+end
+
+% get the color of a pixel according to the Kelvin color scale
+function color = kelvin_color_scale(value, min_value, max_value)
+    % get the normalized value of the pixel
+    normalized_value = (value - min_value) / (max_value - min_value);
+
+    % get the color of the pixel according to the Kelvin color scale using 8 colors from blue to red
+    if normalized_value < 0.2
+        color = [0, 0, 255];
+    elseif normalized_value < 0.3
+        color = [0, 255, 255];
+    elseif normalized_value < 0.375
+        color = [255, 255, 0];
+    elseif normalized_value < 0.45
+        color = [255, 127, 0];
+    elseif normalized_value < 0.625
+        color = [255, 50, 0];
+    elseif normalized_value < 0.75
+        color = [255, 0, 0];
+    elseif normalized_value < 0.825
+        color = [120, 0, 0];
+    else
+        color = [50, 0, 0];
+    end
+    
+end
+
+%TODO : function to translate, flip and rotate and center croped images
+
 
 
 
