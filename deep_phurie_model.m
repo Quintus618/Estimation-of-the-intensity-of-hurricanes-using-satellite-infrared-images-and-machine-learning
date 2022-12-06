@@ -189,14 +189,19 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
 %d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
 
-colorized_image_1 = colorize(hurricane_IR_image_1)
+colorized_image_1 = colorize(hurricane_IR_image_1);
 imshow(colorized_image_1);
 title("IVAN Hurricane IR colorized")
 figure
 
-colorized_image_3 = colorize(hurricane_IR_image_3)
+colorized_image_3 = colorize(hurricane_IR_image_3);
 imshow(colorized_image_3);
-title("IVAN Hurricane IR colorized")
+title("Katrina Hurricane IR colorized")
+figure
+
+modified_image_1 = translate_flip_rotate_crop(colorized_image_1);
+imshow(modified_image_1)
+title("IVAN Hurricane IR modified")
 
 
 % Convolutional neural network trained
@@ -703,7 +708,43 @@ function color = kelvin_color_scale(value, min_value, max_value)
     
 end
 
-%TODO : function to translate, flip and rotate and center croped images
+%function to translate, flip and rotate and crop the image to the center randomly
+%30% of the time : translation
+%40% of the time : flip
+%30% of the time : rotation
+function modified_image = translate_flip_rotate_crop(image)
+    % get the number of rows and columns of the image
+    [rows, columns] = size(image);
+
+    % get a random number between 0 and 1
+    random_number = rand();
+
+    % if the random number is less than 0.3, translate the image
+    if random_number < 0.3
+        % get a random number between -10 and 10
+        random_number = randi([-5, 5]);
+
+        % translate the image using imtranslate and cut the image of random_number pixels
+        modified_image = imtranslate(image, [random_number, random_number], 'FillValues', 0);
+        modified_image = imcrop(modified_image, [abs(random_number) + 1, abs(random_number) + 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
+
+        disp("Translated image of " + random_number + " pixels")
+
+
+    % if the random number is less than 0.7, flip the image
+    elseif random_number < 0.7
+        % flip the image
+        modified_image = flip(image);
+        disp("Flipped image")
+    % if the random number is less than 1, rotate the image
+    else
+        % rotate the image using imrotate of 90 degrees
+        modified_image = imrotate(image, 90);
+        disp("Rotated image")
+    end   
+end
+
+
 
 
 
