@@ -360,6 +360,8 @@ function detected = pixel_treatment(image_IR)
     end
 end
 
+
+
 % function used to get all files and folders, used in the preprecessed_data
 % function
 function result = getFiles(parentDir, isFolder)
@@ -407,7 +409,7 @@ function preprocessed_data = preprocessing()
                         else 
                             continue;
                         end
-                        end
+                        
                     
                         % remove images with landfall
                         detected_land = remove_landfall(hurricane_IR_image)
@@ -416,7 +418,7 @@ function preprocessed_data = preprocessing()
                         else
                             continue;
                         end
-                        end
+                        
                     
                         % resize image
                         image_IR = imresize(hurricane_IR_image, [224, 224]);
@@ -424,12 +426,12 @@ function preprocessed_data = preprocessing()
                         % print for each year, the number of good images
                         disp("Year: " + year)
                         disp("Number of good images:" + number_good_image)
-
                     end
                 end
             end
         end
     end
+    
 
     % For each file, apply the preprocessing
     %{
