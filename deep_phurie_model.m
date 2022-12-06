@@ -721,9 +721,9 @@ function modified_image = translate_flip_rotate_crop(image)
     random_number = rand();
 
     % if the random number is less than 0.3, translate the image
-    if random_number < 0.9
+    if random_number < 0.3
         % get a random number between -10 and 10
-        random_number = randi([-5, -5]);
+        random_number = randi([-5, 5]);
 
         % translate the image using imtranslate and cut the image of random_number pixels
         modified_image = imtranslate(image, [random_number, random_number], 'FillValues', 0);
