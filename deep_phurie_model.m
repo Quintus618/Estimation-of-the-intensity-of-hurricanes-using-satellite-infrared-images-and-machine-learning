@@ -229,15 +229,15 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
     % TODO check if file already downloaded
 
     % creates the base folder of the dataset if it doesn't already exists 
-    if ~exist(strcat(folder_path, pathsep, 'HURSAT-B1'))
+    if ~exist(strcat(folder_path, filesep, 'HURSAT-B1'))
         mkdir(folder_path, 'HURSAT-B1');
     end
-    folder_path = strcat(folder_path, pathsep, 'HURSAT-B1');
+    folder_path = strcat(folder_path, filesep, 'HURSAT-B1');
 
     for i = 0:years_apart
         year = base_year + i;
         % creates a folder for each year
-        if ~exist(strcat(folder_path, pathsep, num2str(year)), 'dir')
+        if ~exist(strcat(folder_path, filesep, num2str(year)), 'dir')
             mkdir(folder_path, num2str(year));
         end
     
@@ -255,12 +255,12 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
             current_file = char(extractBetween(out{j}, '<a href="', '">'));
             file_url = strcat(url, current_file);
             save_path = strcat(folder_path, num2str(year));
-            save_path = strcat(save_path, pathsep);
+            save_path = strcat(save_path, filesep);
             save_path = strcat(save_path, current_file);
             websave(save_path, file_url)
 
             % creates a folder for each hurricane
-            current_folder = strcat(folder_path, num2str(year), pathsep, extractBefore(current_file, ".tar.gz"));
+            current_folder = strcat(folder_path, num2str(year), filesep, extractBefore(current_file, ".tar.gz"));
             if ~exist(current_folder, 'dir')
                 mkdir(current_folder);
             end
@@ -360,33 +360,79 @@ function detected = pixel_treatment(image_IR)
     end
 end
 
+% function used to get all files and folders, used in the preprecessed_data
+% function
+function result = getFiles(parentDir, isFolder)
+    files = dir(parentDir);
+    if isFolder
+        dirFlags = [files.isdir];
+        subFolders = files(dirFlags);
+        result = {subFolders(3:end).name};
+    else
+        result = {files(3:end).name};
+    end
+end
+
 % preprocessing phase
 function preprocessed_data = preprocessing()
 
     number_good_image = 0;
 
-    % Browse HURSAT-B1 folders and browse each hurricane folder
-    folder_path = '\'
-    %{
-    for year = 2004:2009
-        if exist(strcat(folder_path, num2str(year)), 'dir')
-            year_folders = dir
-        end
-    end
-    %}
+    folder_path = "HURSAT-B1"; % set as param ?
+
+    years_folder = getFiles(folder_path, true);
     
-    % get each year folders
-    %{
-    year_folders = ls;
-    for element in year_folders
-        % checking if element is a folder
-        if exist(element, 'dir')
-            
+    for i = 1:length(years_folder)
+        current_year_folder_str = string(years_folder(i));
+        if isfolder(strcat(folder_path, filesep, current_year_folder_str))
+            current_year_folder = getFiles(strcat(folder_path, filesep, current_year_folder_str), true);
+            current_year_folder_str = strcat(folder_path, filesep, current_year_folder_str);
+            %disp(current_year_folder_str);
+            for j = 1:length(current_year_folder)
+                current_hurr_folder_str = string(current_year_folder(j));
+                if isfolder(strcat(current_year_folder_str, filesep, current_hurr_folder_str))
+                    current_hurr_folder = getFiles(strcat(current_year_folder_str, filesep, current_hurr_folder_str), false);
+                    current_hurr_folder_str = strcat(current_year_folder_str, filesep, current_hurr_folder_str);
+                    for k = 1:length(current_hurr_folder)
+                        current_hurr_str = string(current_hurr_folder(k));
+                        nc_file = strcat(current_hurr_folder_str, filesep, current_hurr_str);
+                        %disp(current_hurr_str);
+
+                        hurricane_IR_image = ncread(nc_file,'IRWIN');
+
+                        % remove images with zero pixel intensity and negative pixels
+                        detected = pixel_treatment(hurricane_IR_image)
+                        if detected == false
+                            number_good_image = number_good_image + 1;
+                        else 
+                            continue;
+                        end
+                        end
+                    
+                        % remove images with landfall
+                        detected_land = remove_landfall(hurricane_IR_image)
+                        if detected == false
+                            number_good_image = number_good_image + 1;
+                        else
+                            continue;
+                        end
+                        end
+                    
+                        % resize image
+                        image_IR = imresize(hurricane_IR_image, [224, 224]);
+                
+                        % print for each year, the number of good images
+                        disp("Year: " + year)
+                        disp("Number of good images:" + number_good_image)
+
+                    end
+                end
+            end
         end
     end
 
     % For each file, apply the preprocessing
-
+    %{
         hurricane_IR_image = ncread(nc_file,'IRWIN');
 
         % remove images with zero pixel intensity and negative pixels
