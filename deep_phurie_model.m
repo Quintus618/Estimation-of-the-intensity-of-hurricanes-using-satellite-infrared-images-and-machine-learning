@@ -370,8 +370,12 @@ end
 % Function that detects if the hurricane is in the sea or on the land thanks to longitude and latitude of the hurricane
 % return True if the hurricane is in the land
 function detected = remove_landfall2(latitude, longitude)
-    
-    land = landmask(latitude,longitude);
+
+    if latitude < 90
+        land = landmask(latitude,longitude);
+    else
+        land = 1;
+    end
 
     if land == 1 % 1 if the hurricane is in the land
         detected = true;
@@ -468,7 +472,7 @@ function [X, y, number_good_images] = preprocessing()
                     
                         % remove images with landfall
                         detected_land = remove_landfall2(hurricane_lat_cent,hurricane_long_cent);
-                        if detected_land == false && counted == false
+                        if detected_land == false && counted == false 
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
                             counted = true;
