@@ -213,20 +213,30 @@ title("IVAN Hurricane IR modified")
 %h5_file = './deep-Phurie-master/model/model.h5'
 %h5disp(h5_file)
 
+base_year = 2001;
+end_year = 2015;
+training_percentage = 0.8;
+
 % Download HURSAT-B1 dataset from 2004 to 2009
-%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2001, 2015, ".")
+%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, ".")
 
 % Filter the dataset (preprocessing)
-p_data = preprocessing();
+[X, y, number_good_images] = preprocessing();
 
 % Split into training set and test set
-
+X_train, y_train, X_test, y_test = traintestsplit(X,y, training_percentage);
 
 % Model
-%[layers, options] = convo_neural_network()
+[layers, options] = convo_neural_network();
 
 % Evaluation of the model
+trained_CNN = trainNetwork(X_train, y_train, layers, options);
 
+% Test the model
+test_cnn(trained_CNN, X_test, y_test);
+
+% plot activations
+plot_activations(trained_CNN, X_test, y_test)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -404,12 +414,15 @@ function result = getFiles(parentDir, isFolder)
 end
 
 % preprocessing phase
-function preprocessed_data = preprocessing()
+function [X, y, number_good_images] = preprocessing()
 
     number_good_image = 0;
     number_good_image_by_year = 0;
     number_wrong_image = 0;
     number_wrong_image_by_year = 0;
+    X = [];
+    y = [];
+    number_good_images = [];
 
     folder_path = "HURSAT-B1"; % set as param ?
 
@@ -469,10 +482,9 @@ function preprocessed_data = preprocessing()
                         % resize image
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
 
-                        % add data to dataset
-                        % X : IR image
-                        % y : wind speed
-                        % FILE .nc4 if it is possible
+                        X = [X; image_IR_resized];
+                        y = [y; hurricane_wind_speed];
+                        number_good_images = [number_good_images; number_good_image_by_year];
           
                     end
                 end
@@ -480,7 +492,7 @@ function preprocessed_data = preprocessing()
         end
 
         % print for each year, the number of good images
-        %disp("Year: " + year)
+        disp("Year: " + current_year_folder_str)
         disp("Number of good images:" + number_good_image_by_year)
         disp("Number of wrong images:" + number_wrong_image_by_year)
     end
@@ -517,57 +529,74 @@ end
 
 % To see in the preprocessing phase
 % train/test split according to the year when the hurricane occurred
-function [training_set, test_set] = traintestsplityear(preprocessed_data,year)
-    % browse the dataset
-    % if the year of the hurricane is equal to the year given in parameter, add it to the test set
-    % else add it to the train set
-    for i = 1:size(preprocessed_data)
-        if preprocessed_data(i).year == year
-            test_set = [test_set, preprocessed_data(i)]
-        else
-            training_set = [training_set, preprocessed_data(i)]
-        end
+function [X_train, y_train, X_test, y_test] = traintestsplityear(X,y,number_good_images,year)
+    diff_year = year - base_year + 1;
+    max_diff_year = end_year - base_year + 1;
+
+    if diff_year == 1
+        X_test = X(1:number_good_images(diff_year), :);
+        y_test = y(1:number_good_images(diff_year), :);
+        X_train = X(number_good_images(diff_year)+1:end, :);
+        y_train = y(number_good_images(diff_year)+1:end, :);
+    elseif diff_year == max_diff_year
+        X_test = X(number_good_images(diff_year)+1:end, :);
+        y_test = y(number_good_images(diff_year)+1:end, :);
+        X_train = X(1:number_good_images(diff_year), :);
+        y_train = y(1:number_good_images(diff_year), :);
+    else
+        X_test = X(number_good_images(diff_year)+1:number_good_images(diff_year+1), :);
+        y_test = y(number_good_images(diff_year)+1:number_good_images(diff_year+1), :);
+        X_train = [X(1:number_good_images(diff_year), :); X(number_good_images(diff_year+1)+1:end, :)];
+        y_train = [y(1:number_good_images(diff_year), :); y(number_good_images(diff_year+1)+1:end, :)];
+
     end
+
 end
 
 % train/test split according a percentage of the dataset
-function [training_set, test_set] = traintestsplit(preprocessed_data, training_percentage)
-    % get the number of images in the dataset
-    number_images = size(preprocessed_data, 2);
-
-    % get the number of images in the training set
-    number_training_images = round(number_images * training_percentage);
-
-    % get the number of images in the test set
-    number_test_images = number_images - number_training_images;
-
+function [X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage)
+    % get the number of images
+    number_images = size(X,1);
+    % get the number of images for the training set
+    number_images_training = floor(number_images * training_percentage);
+    % get the number of images for the test set
+    number_images_test = number_images - number_images_training;
     % get the training set
-    training_set = preprocessed_data(1:number_training_images);
-
+    X_train = X(1:number_images_training, :);
+    y_train = y(1:number_images_training, :);
     % get the test set
-    test_set = preprocessed_data(number_training_images+1:end);
+    X_test = X(number_images_training+1:number_images, :);
+    y_test = y(number_images_training+1:number_images, :);
 end
 
 
 % train the CNN
-function trained_network = train_cnn(layers, options, training_set)
+function trained_network = train_cnn(layers, options, X_train, y_train)
+    % convert the training set to a table
+    training_set = table(X_train, y_train);
+    % train the CNN
     trained_network = trainNetwork(training_set, layers, options);
 end
 
-% test the CNN according to the test dataset
-function test_cnn(trained_network, test_dataset)
-    Y_pred = classify(trained_network, test_dataset);
-    %YTest = test_dataset.Labels;
-    accuracy = sum(YPred == YTest)/numel(YTest)
+% test the CNN according to the test dataset to predict Wind Speed
+function test_cnn(trained_network, X_test, y_test)
+    % convert the test set to a table
+    test_set = table(X_test, y_test);
+    % test the CNN
+    test_predictions = predict(trained_network, test_set);
+    % get the RMSE
+    rmse = sqrt(mean((test_predictions - y_test).^2));
+    % print the RMSE
+    disp("RMSE: " + rmse)
 end
 
 % plot outputs of each layer of our CNN architecture
-function plot_cnn(trained_network, test_dataset)
+function plot_cnn(trained_network, X_test, y_test)
     % get the first image of the test dataset
-    img = readimage(test_dataset, 1);
+    img = readimage(X_test, 1);
 
     % get the first image of the test dataset
-    label = test_dataset.Labels(1);
+    label = y_test.Labels(1);
 
     % get the output of each layer
     layer_1 = 'conv_1';
