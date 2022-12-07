@@ -3,7 +3,7 @@ close all
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PROGRAM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%{
 % Hurricane localized in the sea
 nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
 
@@ -33,15 +33,17 @@ rgb = [ ...
    244   109    67
    213    62    79
    158     1    66  ] / 255;
+%}
 
 % Get information about the file
-ncinfo(nc_file_1)
+%ncinfo(nc_file_1)
 
 % Display the file
-ncdisp(nc_file_1);
+%ncdisp(nc_file_1);
 
 % Open and read a NC file with particular variable
 % satellite IR image of a hurricane where we apply a colormap
+%{
 hurricane_IR_image_1 = ncread(nc_file_1,'IRWIN');
 hurricane_CO_image_1 = ncread(nc_file_1,'IRCO2');
 imshow(hurricane_IR_image_1);
@@ -62,7 +64,7 @@ hurricane_wind_speed_1 = ncread(nc_file_1,'WindSpd');
 hurricane_long_cent_1 = ncread(nc_file_1,'archer_lon');
 hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
 hurricane_sat_name_1 = ncreadatt(nc_file_1,"/","Satellite_Name");
-
+%}
 %{
 hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
 hurricane_CO_image_2 = ncread(nc_file_2,'IRWVP');
@@ -84,6 +86,7 @@ hurricane_lat_cent_2 = ncread(nc_file_2,'archer_lat');
 hurricane_sat_name_2 = ncreadatt(nc_file_2,"/","Satellite_Name");
 %}
 
+%{
 hurricane_IR_image_3 = ncread(nc_file_3,'IRWIN');
 hurricane_CO_image_3 = ncread(nc_file_3,'IRCO2');
 imshow(hurricane_IR_image_3);
@@ -102,6 +105,7 @@ hurricane_wind_speed_3 = ncread(nc_file_3,'WindSpd');
 hurricane_long_cent_3 = ncread(nc_file_3,'archer_lon');
 hurricane_lat_cent_3 = ncread(nc_file_3,'archer_lat');
 hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
+%}
 
 %{
 hurricane_IR_image_4 = ncread(nc_file_4,'IRWIN');
@@ -189,6 +193,7 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
 %d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
 
+%{
 colorized_image_1 = colorize(hurricane_IR_image_1);
 imshow(colorized_image_1);
 title("IVAN Hurricane IR colorized")
@@ -202,23 +207,25 @@ figure
 modified_image_1 = translate_flip_rotate_crop(colorized_image_1);
 imshow(modified_image_1)
 title("IVAN Hurricane IR modified")
-
+%}
 
 % Convolutional neural network trained
 %h5_file = './deep-Phurie-master/model/model.h5'
 %h5disp(h5_file)
 
 % Download HURSAT-B1 dataset from 2004 to 2009
-download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2010, 2010, ".")
+%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", 2001, 2015, ".")
 
 % Filter the dataset (preprocessing)
-%preprocessing()
+p_data = preprocessing();
 
 % Split into training set and test set
 
 
 % Model
 %[layers, options] = convo_neural_network()
+
+% Evaluation of the model
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -344,9 +351,9 @@ function detected = remove_landfall(image)
     disp("Mean: " + meanIntensity)
     disp("Standard deviation: " + stdIntensity) % interesting point to detect landfall
     if stdIntensity <= 20.4
-        detected = true
+        detected = true;
     else
-        detected = false
+        detected = false;
     end
 end
 
@@ -354,13 +361,15 @@ end
 % return True if the hurricane is in the land
 function detected = remove_landfall2(latitude, longitude)
     
-    land = landmask(latitude,longitude) 
+    land = landmask(latitude,longitude);
 
     if land == 1 % 1 if the hurricane is in the land
-        detected = true
+        detected = true;
     else
-        detected = false
+        detected = false;
     end
+    
+    warning('off','all')
     
 end
 
@@ -370,8 +379,8 @@ end
 function detected = pixel_treatment(image_IR)
     min_visible = min(image_IR(:));
     test_NaN = anynan(image_IR);
-    disp("Valeur min: " + min_visible)
-    disp("Présence NaN: " + test_NaN)
+    %disp("Valeur min: " + min_visible)
+    %disp("Présence NaN: " + test_NaN)
     if min_visible <= 120 || test_NaN == 1
         detected = true;
     else
@@ -399,6 +408,8 @@ function preprocessed_data = preprocessing()
 
     number_good_image = 0;
     number_good_image_by_year = 0;
+    number_wrong_image = 0;
+    number_wrong_image_by_year = 0;
 
     folder_path = "HURSAT-B1"; % set as param ?
 
@@ -407,6 +418,7 @@ function preprocessed_data = preprocessing()
     for i = 1:length(years_folder)
         current_year_folder_str = string(years_folder(i));
         number_good_image_by_year=0;
+        number_wrong_image_by_year = 0;
         if isfolder(strcat(folder_path, filesep, current_year_folder_str))
             current_year_folder = getFiles(strcat(folder_path, filesep, current_year_folder_str), true);
             current_year_folder_str = strcat(folder_path, filesep, current_year_folder_str);
@@ -422,7 +434,7 @@ function preprocessed_data = preprocessing()
                         %disp(current_hurr_str);
 
                         hurricane_IR_image = ncread(nc_file,'IRWIN');      % X
-                        hurricane_visible_image = ncread(nc_file,'VSCHN');
+                        % hurricane_visible_image = ncread(nc_file,'VSCHN');
                         hurricane_wind_speed = ncread(nc_file,'WindSpd');  % Y
                         hurricane_long_cent = ncread(nc_file,'archer_lon');
                         hurricane_lat_cent = ncread(nc_file,'archer_lat');
@@ -433,16 +445,20 @@ function preprocessed_data = preprocessing()
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
                         else 
+                            number_wrong_image = number_wrong_image + 1;
+                            number_wrong_image_by_year = number_wrong_image_by_year + 1;
                             continue;
                         end
                         
                     
                         % remove images with landfall
-                        detected_land = remove_landfall(hurricane_IR_image);
-                        if detected == false
+                        detected_land = remove_landfall2(hurricane_lat_cent,hurricane_long_cent);
+                        if detected_land == false
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
                         else
+                            number_wrong_image = number_wrong_image + 1;
+                            number_wrong_image_by_year = number_wrong_image_by_year + 1;
                             continue;
                         end
                         
@@ -463,9 +479,13 @@ function preprocessed_data = preprocessing()
         % print for each year, the number of good images
         disp("Year: " + year)
         disp("Number of good images:" + number_good_image_by_year)
+        disp("Number of wrong images:" + number_wrong_image_by_year)
     end
     
     disp("Total number of good images: " + number_good_image)
+    disp("Total number of wrong images: " + number_wrong_image)
+
+    preprocessed_data = 1; % To be changed
 end
 
 % Convolutional Neural Network
