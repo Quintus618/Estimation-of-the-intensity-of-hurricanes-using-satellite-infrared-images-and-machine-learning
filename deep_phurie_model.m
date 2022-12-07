@@ -381,7 +381,7 @@ function detected = pixel_treatment(image_IR)
     test_NaN = anynan(image_IR);
     %disp("Valeur min: " + min_visible)
     %disp("Présence NaN: " + test_NaN)
-    if min_visible <= 120 || test_NaN == 1
+    if min_visible <= 160 || test_NaN == 1
         detected = true;
     else
         detected = false;
@@ -433,6 +433,7 @@ function preprocessed_data = preprocessing()
                         nc_file = strcat(current_hurr_folder_str, filesep, current_hurr_str);
                         %disp(current_hurr_str);
 
+                        counted = false;
                         hurricane_IR_image = ncread(nc_file,'IRWIN');      % X
                         % hurricane_visible_image = ncread(nc_file,'VSCHN');
                         hurricane_wind_speed = ncread(nc_file,'WindSpd');  % Y
@@ -444,6 +445,7 @@ function preprocessed_data = preprocessing()
                         if detected == false
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
+                            counted = true;
                         else 
                             number_wrong_image = number_wrong_image + 1;
                             number_wrong_image_by_year = number_wrong_image_by_year + 1;
@@ -453,9 +455,10 @@ function preprocessed_data = preprocessing()
                     
                         % remove images with landfall
                         detected_land = remove_landfall2(hurricane_lat_cent,hurricane_long_cent);
-                        if detected_land == false
+                        if detected_land == false && counted == false
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
+                            counted = true;
                         else
                             number_wrong_image = number_wrong_image + 1;
                             number_wrong_image_by_year = number_wrong_image_by_year + 1;
@@ -477,7 +480,7 @@ function preprocessed_data = preprocessing()
         end
 
         % print for each year, the number of good images
-        disp("Year: " + year)
+        %disp("Year: " + year)
         disp("Number of good images:" + number_good_image_by_year)
         disp("Number of wrong images:" + number_wrong_image_by_year)
     end
