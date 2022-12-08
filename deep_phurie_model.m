@@ -3,6 +3,7 @@ close all
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PROGRAM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %{
 % Hurricane localized in the sea
 nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
@@ -432,6 +433,11 @@ function [X, y, number_good_images] = preprocessing()
 
     folder_path = "HURSAT-B1"; % set as param ?
 
+    % create a folder to store the preprocessed data
+    if ~exist('preprocessed_data', 'dir')
+        mkdir('preprocessed_data');
+    end
+
     years_folder = getFiles(folder_path, true);
     
     for i = 1:length(years_folder)
@@ -444,7 +450,7 @@ function [X, y, number_good_images] = preprocessing()
             %disp(current_year_folder_str);
             for j = 1:length(current_year_folder)
                 current_hurr_folder_str = string(current_year_folder(j));
-                X_year = [];
+                X_year = {};
                 y_year = [];
 
                 if isfolder(strcat(current_year_folder_str, filesep, current_hurr_folder_str))
@@ -498,7 +504,9 @@ function [X, y, number_good_images] = preprocessing()
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
                         disp(number_good_image_by_year)
 
-                        X_year = [X_year, image_IR_resized];
+
+                        % X_year : add the image to the X_year array
+                        X_year = cat(2,X_year, image_IR_resized);
                         y_year = [y_year, hurricane_wind_speed];
           
                     end
@@ -507,6 +515,9 @@ function [X, y, number_good_images] = preprocessing()
                     X = cat(2,X,X_year);
                     y = cat(2,y,y_year);
                 end
+                disp("X_year: " + size(X_year))
+                disp("X: " + size(X))
+                disp("Y: " + size(y))
             end
         end
 
@@ -520,7 +531,8 @@ function [X, y, number_good_images] = preprocessing()
     disp("Total number of good images: " + number_good_image)
     disp("Total number of wrong images: " + number_wrong_image)
 
-    preprocessed_data = 1; % To be changed
+    
+
 end
 
 % Convolutional Neural Network
@@ -541,8 +553,29 @@ function [layers, options] = convo_neural_network()
         maxPooling2dLayer(3, 'Stride', 1)
         fullyConnectedLayer(512)
         fullyConnectedLayer(64)
+        regressionLayer
     ]
-    options = trainingOptions('adam', 'OutputFcn', @TrainingRMSE, 'MaxEpochs', 1000);
+
+    % option adam, random dropping of some neurons during training, Batch normalization, learning rate 5e-5, 1000 epochs, early stopping at 50 epochs
+    % 'ExecutionEnvironment', 'gpu', ...
+    options = trainingOptions('adam', ...
+        'MaxEpochs', 1000, ...
+        'MiniBatchSize', 64, ...
+        'InitialLearnRate', 5e-5, ...
+        'Shuffle', 'every-epoch', ...
+        'ValidationFrequency', 30, ...
+        'Verbose', false, ...
+        'Plots', 'training-progress', ...
+        'ValidationPatience', 50, ...
+        'LearnRateSchedule', 'piecewise', ...
+        'LearnRateDropPeriod', 100, ...
+        'LearnRateDropFactor', 0.1, ...
+        'L2Regularization', 0.0001, ...
+        'GradientThreshold', 1, ...
+        'SquaredGradientDecayFactor', 0.99, ...
+        'CheckpointPath', tempdir);
+
+
 end
 
 % Hyperparameter tuning for the CNN to find the best parameters
@@ -576,17 +609,17 @@ end
 % train/test split according a percentage of the dataset
 function [X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage)
     % get the number of images
-    number_images = size(X,1);
+    number_images = size(X,2);
     % get the number of images for the training set
     number_images_training = floor(number_images * training_percentage);
     % get the number of images for the test set
     number_images_test = number_images - number_images_training;
     % get the training set
-    X_train = X(1:number_images_training, :);
-    y_train = y(1:number_images_training, :);
+    X_train = X(:, 1:number_images_training);
+    y_train = y(:, 1:number_images_training);
     % get the test set
-    X_test = X(number_images_training+1:number_images, :);
-    y_test = y(number_images_training+1:number_images, :);
+    X_test = X(:, number_images_training+1:number_images);
+    y_test = y(:, number_images_training+1:number_images);
 end
 
 
