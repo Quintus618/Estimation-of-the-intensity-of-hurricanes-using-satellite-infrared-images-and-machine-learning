@@ -224,7 +224,9 @@ training_percentage = 0.8;
 [X, y, number_good_images] = preprocessing();
 
 % Split into training set and test set
-X_train, y_train, X_test, y_test = traintestsplit(X,y, training_percentage);
+%X = [hurricane_IR_image_1, hurricane_IR_image_5, hurricane_IR_image_6]
+%y = [hurricane_wind_speed_1, hurricane_wind_speed_5, hurricane_wind_speed_6]
+[X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
 
 % Model
 [layers, options] = convo_neural_network();
@@ -442,6 +444,9 @@ function [X, y, number_good_images] = preprocessing()
             %disp(current_year_folder_str);
             for j = 1:length(current_year_folder)
                 current_hurr_folder_str = string(current_year_folder(j));
+                X_year = [];
+                y_year = [];
+
                 if isfolder(strcat(current_year_folder_str, filesep, current_hurr_folder_str))
                     current_hurr_folder = getFiles(strcat(current_year_folder_str, filesep, current_hurr_folder_str), false);
                     current_hurr_folder_str = strcat(current_year_folder_str, filesep, current_hurr_folder_str);
@@ -450,7 +455,8 @@ function [X, y, number_good_images] = preprocessing()
                         nc_file = strcat(current_hurr_folder_str, filesep, current_hurr_str);
                         %disp(current_hurr_str);
 
-                        counted = false;
+                        %counted = false;
+
                         hurricane_IR_image = ncread(nc_file,'IRWIN');      % X
                         % hurricane_visible_image = ncread(nc_file,'VSCHN');
                         hurricane_wind_speed = ncread(nc_file,'WindSpd');  % Y
@@ -459,38 +465,47 @@ function [X, y, number_good_images] = preprocessing()
 
                         % remove images with zero pixel intensity and negative pixels
                         detected = pixel_treatment(hurricane_IR_image);
-                        if detected == false
+                        % remove images with landfall
+                        detected_land = remove_landfall2(hurricane_lat_cent,hurricane_long_cent);
+                        if detected == false && detected_land == false
                             number_good_image = number_good_image + 1;
                             number_good_image_by_year = number_good_image_by_year + 1;
-                            counted = true;
+                            %counted = true;
                         else 
                             number_wrong_image = number_wrong_image + 1;
                             number_wrong_image_by_year = number_wrong_image_by_year + 1;
+                            delete(nc_file);
                             continue;
                         end
                         
                     
-                        % remove images with landfall
-                        detected_land = remove_landfall2(hurricane_lat_cent,hurricane_long_cent);
-                        if detected_land == false && counted == false 
-                            number_good_image = number_good_image + 1;
-                            number_good_image_by_year = number_good_image_by_year + 1;
-                            counted = true;
+%{
+                        if detected_land == false 
+                            if counted == false 
+                                number_good_image = number_good_image + 1;
+                                number_good_image_by_year = number_good_image_by_year + 1;
+                            end
                         else
                             number_wrong_image = number_wrong_image + 1;
                             number_wrong_image_by_year = number_wrong_image_by_year + 1;
+                            delete(nc_file)
                             continue;
                         end
+%}
                         
                     
                         % resize image
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
+                        disp(number_good_image_by_year)
 
-                        X = [X; image_IR_resized];
-                        y = [y; hurricane_wind_speed];
-                        number_good_images = [number_good_images; number_good_image_by_year];
+                        %X_year = [X_year ; image_IR_resized];
+                        %y_year = [y_year ; hurricane_wind_speed];
           
                     end
+                end
+                if size(X_year) ~= 0
+                    X = cat(2,X,X_year);
+                    y = cat(2,y,y_year);
                 end
             end
         end
@@ -499,6 +514,7 @@ function [X, y, number_good_images] = preprocessing()
         disp("Year: " + current_year_folder_str)
         disp("Number of good images:" + number_good_image_by_year)
         disp("Number of wrong images:" + number_wrong_image_by_year)
+        number_good_images = [number_good_images; number_good_image_by_year];
     end
     
     disp("Total number of good images: " + number_good_image)
