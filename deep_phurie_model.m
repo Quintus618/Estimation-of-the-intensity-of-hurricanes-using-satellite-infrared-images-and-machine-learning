@@ -498,8 +498,8 @@ function [X, y, number_good_images] = preprocessing()
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
                         disp(number_good_image_by_year)
 
-                        X_year = [X_year ; image_IR_resized];
-                        y_year = [y_year ; hurricane_wind_speed];
+                        X_year = [X_year, image_IR_resized];
+                        y_year = [y_year, hurricane_wind_speed];
           
                     end
                 end
@@ -514,7 +514,7 @@ function [X, y, number_good_images] = preprocessing()
         disp("Year: " + current_year_folder_str)
         disp("Number of good images:" + number_good_image_by_year)
         disp("Number of wrong images:" + number_wrong_image_by_year)
-        number_good_images = [number_good_images; number_good_image_by_year];
+        number_good_images = [number_good_images, number_good_image_by_year];
     end
     
     disp("Total number of good images: " + number_good_image)
@@ -542,7 +542,7 @@ function [layers, options] = convo_neural_network()
         fullyConnectedLayer(512)
         fullyConnectedLayer(64)
     ]
-    options = trainingOptions('adam', 'OutputFcn', 'TrainingRMSE', 'MaxEpochs', 1000);
+    options = trainingOptions('adam', 'OutputFcn', @TrainingRMSE, 'MaxEpochs', 1000);
 end
 
 % Hyperparameter tuning for the CNN to find the best parameters
