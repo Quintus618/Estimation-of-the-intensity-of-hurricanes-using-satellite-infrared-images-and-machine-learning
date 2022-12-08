@@ -498,8 +498,8 @@ function [X, y, number_good_images] = preprocessing()
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
                         disp(number_good_image_by_year)
 
-                        %X_year = [X_year ; image_IR_resized];
-                        %y_year = [y_year ; hurricane_wind_speed];
+                        X_year = [X_year ; image_IR_resized];
+                        y_year = [y_year ; hurricane_wind_speed];
           
                     end
                 end
@@ -593,17 +593,17 @@ end
 % train the CNN
 function trained_network = train_cnn(layers, options, X_train, y_train)
     % convert the training set to a table
-    training_set = table(X_train, y_train);
+    %training_set = table(X_train, y_train);
     % train the CNN
-    trained_network = trainNetwork(training_set, layers, options);
+    trained_network = trainNetwork(X_train,y_train, layers, options);
 end
 
 % test the CNN according to the test dataset to predict Wind Speed
 function test_cnn(trained_network, X_test, y_test)
     % convert the test set to a table
-    test_set = table(X_test, y_test);
+    %test_set = table(X_test, y_test);
     % test the CNN
-    test_predictions = predict(trained_network, test_set);
+    test_predictions = predict(trained_network, X_test);
     % get the RMSE
     rmse = sqrt(mean((test_predictions - y_test).^2));
     % print the RMSE
