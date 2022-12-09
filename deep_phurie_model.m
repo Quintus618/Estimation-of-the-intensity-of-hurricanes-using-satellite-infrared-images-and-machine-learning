@@ -542,11 +542,18 @@ function [X, y, number_good_images] = preprocessing()
                             continue;
                         end
 %}
+
+                        % get a random number between 0 and 1
+                        random_number = rand();
+
+                        if random_number < 0.5
+                            hurricane_IR_image = translate_flip_rotate_crop(hurricane_IR_image);
+                        end
                         
                     
                         % resize image
                         image_IR_resized = imresize(hurricane_IR_image, [224, 224]);
-                        disp(number_good_image_by_year)
+                        
 
 
                         % X_year : add the image to the X_year array
