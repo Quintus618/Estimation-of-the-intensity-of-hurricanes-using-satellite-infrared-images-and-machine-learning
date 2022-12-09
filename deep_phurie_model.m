@@ -336,7 +336,7 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
         for j=1:length(out)
             % downloads each archive
             current_file = char(extractBetween(out{j}, '<a href="', '">'));
-            file_url = strcat(url, current_file)
+            file_url = strcat(url, current_file);
             save_path = strcat(folder_path, num2str(year));
             save_path = strcat(save_path, filesep);
             save_path = strcat(save_path, current_file);
@@ -873,14 +873,16 @@ function modified_image = translate_flip_rotate_crop(image)
     % if the random number is less than 0.3, translate the image
     if random_number < 0.3
         % get a random number between -10 and 10
-        random_number = randi([-5, 5]);
+        random_number = randi([-10, 10]);
 
         % translate the image using imtranslate and cut the image of random_number pixels
         modified_image = imtranslate(image, [random_number, random_number], 'FillValues', 0);
         if random_number >=0
             modified_image = imcrop(modified_image, [abs(random_number) + 1, abs(random_number) + 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
         else
-            modified_image = imcrop(modified_image, [1, 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
+            modified_image = flip(modified_image, 2);
+            modified_image = imcrop(modified_image, [abs(random_number) + 1, 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
+            modified_image = flip(modified_image, 2);
         end
         disp("Translated image of " + random_number + " pixels")
 
