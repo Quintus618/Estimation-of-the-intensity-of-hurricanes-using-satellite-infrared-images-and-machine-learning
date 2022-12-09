@@ -42,30 +42,6 @@ rgb = [ ...
 % Display the file
 %ncdisp(nc_file_1);
 
-% Open and read a NC file with particular variable
-% satellite IR image of a hurricane where we apply a colormap
-%{
-hurricane_IR_image_1 = ncread(nc_file_1,'IRWIN');
-hurricane_CO_image_1 = ncread(nc_file_1,'IRCO2');
-imshow(hurricane_IR_image_1);
-title("IVAN Hurricane IR")
-colormap(rgb);
-clim([200 320]);
-colorbar;
-figure
-
-hurricane_visible_image_1 = ncread(nc_file_1,'VSCHN');
-imshow(hurricane_visible_image_1);
-title("IVAN Hurricane visible")
-figure
-
-
-% Get some precise information about nc file
-hurricane_wind_speed_1 = ncread(nc_file_1,'WindSpd');
-hurricane_long_cent_1 = ncread(nc_file_1,'archer_lon');
-hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
-hurricane_sat_name_1 = ncreadatt(nc_file_1,"/","Satellite_Name");
-%}
 %{
 hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
 hurricane_CO_image_2 = ncread(nc_file_2,'IRWVP');
@@ -214,35 +190,100 @@ title("IVAN Hurricane IR modified")
 %h5_file = './deep-Phurie-master/model/model.h5'
 %h5disp(h5_file)
 
+
+% PARAMETERS
 base_year = 2001;
 end_year = 2015;
 training_percentage = 0.8;
+rgb = [ ...
+    94    79   162
+    50   136   189
+   102   194   165
+   171   221   164
+   230   245   152
+   255   255   191
+   254   224   139
+   253   174    97
+   244   109    67
+   213    62    79
+   158     1    66  ] / 255;
+
+% Hurricane localized in the sea
+nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
+
+% Display nc file info
+ncdisp(nc_file_1);
+
+% Open and read a NC file with particular variable
+% satellite IR image of a hurricane where we apply a colormap
+hurricane_IR_image_1 = ncread(nc_file_1,'IRWIN');
+hurricane_visible_image_1 = ncread(nc_file_1,'VSCHN');
+
+% Get some precise information about nc file
+hurricane_wind_speed_1 = ncread(nc_file_1,'WindSpd');
+hurricane_long_cent_1 = ncread(nc_file_1,'archer_lon');
+hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
+
+colorized_hurricane_image_1 = colorize(hurricane_IR_image_1);
+
+% plot kind of hurricane data that we have for the project
+figure
+set(gcf, 'Position',  [100, 100, 1000, 1000])
+subplot(2,2,1)
+imshow(hurricane_IR_image_1); 
+title("KARL Hurricane IR")
+subplot(2,2,2)
+imshow(hurricane_IR_image_1);
+title("KARL Hurricane IR with colormap")
+colormap(rgb);
+clim([200 320]);
+colorbar;
+subplot(2,2,3)
+imshow(hurricane_visible_image_1);
+title("KARL Hurricane visible")
+subplot(2,2,4)
+imshow(colorized_hurricane_image_1);
+title("RGB KARL Hurricane with our kelvin scale")
+
+% plot the colorized hurricane image and transform it on the same figure
+for i = 0:2
+    modified_hurricane_image_1 = translate_flip_rotate_crop(colorized_hurricane_image_1);
+    figure
+    set(gcf, 'Position',  [100, 100, 1000, 1000])
+    subplot(1,2,1)
+    imshow(colorized_hurricane_image_1);
+    title("KARL Hurricane colorized with our kelvin scale")
+    subplot(1,2,2)
+    imshow(modified_hurricane_image_1);
+    title("RGB KARL Hurricane with our kelvin scale with modifications")
+end
+
+% contours of the hurricane
+annotated_hurricane_shape(hurricane_visible_image_1, 80, 'c.', [1000,1500,2000,2500,3000,3500], 5)
 
 % Download HURSAT-B1 dataset from 2004 to 2009
 %download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, ".")
 
 % Filter the dataset (preprocessing)
-[X, y, number_good_images] = preprocessing();
+%[X, y, number_good_images] = preprocessing();
 
 % Split into training set and test set
-%X = [hurricane_IR_image_1, hurricane_IR_image_5, hurricane_IR_image_6]
-%y = [hurricane_wind_speed_1, hurricane_wind_speed_5, hurricane_wind_speed_6]
-[X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
+%[X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
 
 % Split the training set into a training set and a validation set
-[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
+%[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
 
 % Model
-[layers, options] = convo_neural_network();
+%[layers, options] = convo_neural_network();
 
 % Evaluation of the model
-trained_CNN = trainNetwork(X_train, y_train, layers, options);
+%trained_CNN = trainNetwork(X_train, y_train, layers, options);
 
 % Test the model
-test_cnn(trained_CNN, X_test, y_test);
+%test_cnn(trained_CNN, X_test, y_test);
 
 % plot activations
-plot_activations(trained_CNN, X_test, y_test)
+%plot_activations(trained_CNN, X_test, y_test)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -314,9 +355,9 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
     end
 end
 
-% Annotate the center of the hurricane
+% Annotate the shape of the hurricane
 % Box that indicates the center of the hurricane
-function annotated_hurricane_center(image, radius, color, iter, sizemark)
+function annotated_hurricane_shape(image, radius, color, iter, sizemark)
     
     [M,N] = size(image);
 
