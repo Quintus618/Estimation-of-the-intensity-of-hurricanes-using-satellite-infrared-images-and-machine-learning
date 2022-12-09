@@ -587,20 +587,20 @@ function [X_train, y_train, X_test, y_test] = traintestsplityear(X,y,number_good
     max_diff_year = end_year - base_year + 1;
 
     if diff_year == 1
-        X_test = X(1:number_good_images(diff_year), :);
-        y_test = y(1:number_good_images(diff_year), :);
-        X_train = X(number_good_images(diff_year)+1:end, :);
-        y_train = y(number_good_images(diff_year)+1:end, :);
+        X_test = X(:, 1:number_good_images(diff_year));
+        y_test = y(:, 1:number_good_images(diff_year));
+        X_train = X(:, number_good_images(diff_year)+1:end);
+        y_train = y(:, number_good_images(diff_year)+1:end);
     elseif diff_year == max_diff_year
-        X_test = X(number_good_images(diff_year)+1:end, :);
-        y_test = y(number_good_images(diff_year)+1:end, :);
-        X_train = X(1:number_good_images(diff_year), :);
-        y_train = y(1:number_good_images(diff_year), :);
+        X_test = X(:, number_good_images(diff_year)+1:end);
+        y_test = y(:, number_good_images(diff_year)+1:end);
+        X_train = X(:, 1:number_good_images(diff_year));
+        y_train = y(:, 1:number_good_images(diff_year));
     else
-        X_test = X(number_good_images(diff_year)+1:number_good_images(diff_year+1), :);
-        y_test = y(number_good_images(diff_year)+1:number_good_images(diff_year+1), :);
-        X_train = [X(1:number_good_images(diff_year), :); X(number_good_images(diff_year+1)+1:end, :)];
-        y_train = [y(1:number_good_images(diff_year), :); y(number_good_images(diff_year+1)+1:end, :)];
+        X_test = X(:, number_good_images(diff_year)+1:number_good_images(diff_year+1));
+        y_test = y(:, number_good_images(diff_year)+1:number_good_images(diff_year+1));
+        X_train = [X(:, 1:number_good_images(diff_year)), X(:, number_good_images(diff_year+1)+1:end)];
+        y_train = [y(:, 1:number_good_images(diff_year)), y(:, number_good_images(diff_year+1)+1:end)];
 
     end
 
