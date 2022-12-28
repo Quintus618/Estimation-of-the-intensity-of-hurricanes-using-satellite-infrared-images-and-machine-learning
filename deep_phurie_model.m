@@ -209,7 +209,7 @@ rgb = [ ...
    158     1    66  ] / 255;
 
 % Hurricane localized in the sea
-nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
+nc_file_1 = '../HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
 
 % Display nc file info
 ncdisp(nc_file_1);
@@ -227,6 +227,7 @@ hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
 colorized_hurricane_image_1 = colorize(hurricane_IR_image_1);
 
 % plot kind of hurricane data that we have for the project
+%{
 figure
 set(gcf, 'Position',  [100, 100, 1000, 1000])
 subplot(2,2,1)
@@ -244,7 +245,9 @@ title("KARL Hurricane visible")
 subplot(2,2,4)
 imshow(colorized_hurricane_image_1);
 title("RGB KARL Hurricane with our kelvin scale")
+%}
 
+%{
 % plot the colorized hurricane image and transform it on the same figure
 for i = 0:2
     modified_hurricane_image_1 = translate_flip_rotate_crop(colorized_hurricane_image_1);
@@ -260,30 +263,38 @@ end
 
 % contours of the hurricane
 annotated_hurricane_shape(hurricane_visible_image_1, 80, 'c.', [1000,1500,2000,2500,3000,3500], 5)
+%}
 
 % Download HURSAT-B1 dataset from 2004 to 2009
 %download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, ".")
 
 % Filter the dataset (preprocessing)
-%[X, y, number_good_images] = preprocessing();
+[X, y, number_good_images] = preprocessing();
 
 % Split into training set and test set
-%[X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
+[X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
 
 % Split the training set into a training set and a validation set
-%[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
+[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
 
 % Model
-%[layers, options] = convo_neural_network();
+[layers, options] = convo_neural_network(X_validation, y_validation);
 
 % Evaluation of the model
-%trained_CNN = trainNetwork(X_train, y_train, layers, options);
+% TEST DEBUG
+%y_train = num2cell(y_train);
+
+%X_train = cell2mat(X_train);
+
+%X_train = cell2table(X_train);
+
+trained_CNN = trainNetwork(X_train, y_train, layers, options);
 
 % Test the model
-%test_cnn(trained_CNN, X_test, y_test);
+test_cnn(trained_CNN, X_test, y_test);
 
 % plot activations
-%plot_activations(trained_CNN, X_test, y_test)
+plot_activations(trained_CNN, X_test, y_test)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -475,7 +486,7 @@ function [X, y, number_good_images] = preprocessing()
     y = [];
     number_good_images = [];
 
-    folder_path = "HURSAT-B1"; % set as param ?
+    folder_path = "..\dataset\HURSAT-B1"; % set as param ?
 
     % create a folder to store the preprocessed data
     if ~exist('preprocessed_data', 'dir')
@@ -587,25 +598,44 @@ function [X, y, number_good_images] = preprocessing()
 end
 
 % Convolutional Neural Network
-function [layers, options] = convo_neural_network()
+function [layers, options] = convo_neural_network(X_validation, y_validation)
     layers = [
-        imageInputLayer([224, 224, 3]) % 1 : grayscale image 3: RGB image
+        imageInputLayer([224, 224, 1]) % 1 : grayscale image 3: RGB image
         convolution2dLayer(5, 32)
+        batchNormalizationLayer
         maxPooling2dLayer(5, 'Stride', 2)
+        dropoutLayer(0.2)
         convolution2dLayer(3, 64)
+        batchNormalizationLayer
         maxPooling2dLayer(3, 'Stride', 2)
+        dropoutLayer(0.2)
         convolution2dLayer(3, 64)
+        batchNormalizationLayer
         maxPooling2dLayer(3, 'Stride', 1)
+        dropoutLayer(0.2)
         convolution2dLayer(3, 64)
+        batchNormalizationLayer
         maxPooling2dLayer(3, 'Stride', 1)
+        dropoutLayer(0.2)
         convolution2dLayer(3, 128)
+        batchNormalizationLayer
         maxPooling2dLayer(3, 'Stride', 1)
+        dropoutLayer(0.2)
         convolution2dLayer(3, 128)
+        batchNormalizationLayer
         maxPooling2dLayer(3, 'Stride', 1)
+        dropoutLayer(0.2)
+        flattenLayer
         fullyConnectedLayer(512)
+        reluLayer
+        dropoutLayer(0.4)
         fullyConnectedLayer(64)
+        reluLayer
+        dropoutLayer(0.2)
+        fullyConnectedLayer(1)
+        reluLayer
         regressionLayer
-    ]
+    ];
 
     % option adam, random dropping of some neurons during training, Batch normalization, learning rate 5e-5, 1000 epochs, early stopping at 50 epochs
     % 'ExecutionEnvironment', 'gpu', ...
@@ -625,7 +655,8 @@ function [layers, options] = convo_neural_network()
         'L2Regularization', 0.0001, ...
         'GradientThreshold', 1, ...
         'SquaredGradientDecayFactor', 0.99, ...
-        'CheckpointPath', tempdir);
+        'CheckpointPath', tempdir, ...
+        'ExecutionEnvironment', 'gpu');
 
 
 end
@@ -891,19 +922,19 @@ function modified_image = translate_flip_rotate_crop(image)
             modified_image = imcrop(modified_image, [abs(random_number) + 1, 1, columns - abs(random_number) - 1, rows - abs(random_number) - 1]);
             modified_image = flip(modified_image, 2);
         end
-        disp("Translated image of " + random_number + " pixels")
+        %disp("Translated image of " + random_number + " pixels")
 
 
     % if the random number is less than 0.7, flip the image
     elseif random_number < 0.7
         % flip the image
         modified_image = flip(image);
-        disp("Flipped image")
+        %disp("Flipped image")
     % if the random number is less than 1, rotate the image
     else
         % rotate the image using imrotate of 90 degrees
         modified_image = imrotate(image, 90);
-        disp("Rotated image")
+        %disp("Rotated image")
     end   
 end
 
