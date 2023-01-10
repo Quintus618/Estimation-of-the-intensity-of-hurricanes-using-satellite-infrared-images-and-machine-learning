@@ -9,6 +9,10 @@ base_year = 2001;
 end_year = 2015;
 training_percentage = 0.8;
 
+% Download HURSAT-B1 dataset from 2004 to 2009
+disp("Downloading dataset");
+%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\")
+
 %{
 % Hurricane localized in the sea
 nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
@@ -253,10 +257,6 @@ end
 % contours of the hurricane
 annotated_hurricane_shape(hurricane_visible_image_1, 80, 'c.', [1000,1500,2000,2500,3000,3500], 5)
 %}
-
-% Download HURSAT-B1 dataset from 2004 to 2009
-disp("Downloading dataset");
-%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\")
 
 % Filter the dataset (preprocessing)
 [X, y, number_good_images] = preprocessing("..\dataset\HURSAT-B1");
