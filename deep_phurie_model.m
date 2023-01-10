@@ -4,6 +4,11 @@ close all
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PROGRAM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% PARAMETERS
+base_year = 2001;
+end_year = 2015;
+training_percentage = 0.8;
+
 %{
 % Hurricane localized in the sea
 nc_file_1 = './HURSAT-B1/2004/HURSAT_b1_v06_2004247N10332_IVAN_c20170721/2004247N10332.IVAN.2004.09.09.2100.18.GOE-12.114.hursat-b1.v06.nc';
@@ -34,15 +39,13 @@ rgb = [ ...
    244   109    67
    213    62    79
    158     1    66  ] / 255;
-%}
 
 % Get information about the file
-%ncinfo(nc_file_1)
+ncinfo(nc_file_1)
 
 % Display the file
-%ncdisp(nc_file_1);
+ncdisp(nc_file_1);
 
-%{
 hurricane_IR_image_2 = ncread(nc_file_2,'IRWIN');
 hurricane_CO_image_2 = ncread(nc_file_2,'IRWVP');
 imshow(hurricane_IR_image_2);
@@ -61,9 +64,7 @@ hurricane_wind_speed_2 = ncread(nc_file_2,'WindSpd');
 hurricane_long_cent_2 = ncread(nc_file_2,'archer_lon');
 hurricane_lat_cent_2 = ncread(nc_file_2,'archer_lat');
 hurricane_sat_name_2 = ncreadatt(nc_file_2,"/","Satellite_Name");
-%}
 
-%{
 hurricane_IR_image_3 = ncread(nc_file_3,'IRWIN');
 hurricane_CO_image_3 = ncread(nc_file_3,'IRCO2');
 imshow(hurricane_IR_image_3);
@@ -82,9 +83,7 @@ hurricane_wind_speed_3 = ncread(nc_file_3,'WindSpd');
 hurricane_long_cent_3 = ncread(nc_file_3,'archer_lon');
 hurricane_lat_cent_3 = ncread(nc_file_3,'archer_lat');
 hurricane_sat_name_3 = ncreadatt(nc_file_3,"/","Satellite_Name");
-%}
 
-%{
 hurricane_IR_image_4 = ncread(nc_file_4,'IRWIN');
 imshow(hurricane_IR_image_4);
 title("KEN Hurricane IR landfall")
@@ -140,13 +139,12 @@ hurricane_wind_speed_6 = ncread(nc_file_6,'WindSpd');
 hurricane_long_cent_6 = ncread(nc_file_6,'archer_lon');
 hurricane_lat_cent_6 = ncread(nc_file_6,'archer_lat');
 hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
-%}
 
 % Hurricane contours
-%annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
+annotated_hurricane_center(hurricane_visible_image_3, 50, 'c.', [5000,6000,7000,8000,9000,10000], 5)
 
 % Eye of the hurricane
-%annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
+annotated_hurricane_center(hurricane_IR_image_1, 5, 'r.', [500,1000,1500,2000,3500,4000], 2)
 
 % Test detection of zero pixel intensity and negative pixels
 %detected_1 = pixel_treatment(hurricane_IR_image_1);
@@ -170,7 +168,6 @@ hurricane_sat_name_6 = ncreadatt(nc_file_6,"/","Satellite_Name");
 %d_5 = remove_landfall2(hurricane_lat_cent_5,hurricane_long_cent_5)
 %d_6 = remove_landfall2(hurricane_lat_cent_6,hurricane_long_cent_6)
 
-%{
 colorized_image_1 = colorize(hurricane_IR_image_1);
 imshow(colorized_image_1);
 title("IVAN Hurricane IR colorized")
@@ -184,17 +181,11 @@ figure
 modified_image_1 = translate_flip_rotate_crop(colorized_image_1);
 imshow(modified_image_1)
 title("IVAN Hurricane IR modified")
-%}
 
 % Convolutional neural network trained
 %h5_file = './deep-Phurie-master/model/model.h5'
 %h5disp(h5_file)
 
-
-% PARAMETERS
-base_year = 2001;
-end_year = 2015;
-training_percentage = 0.8;
 rgb = [ ...
     94    79   162
     50   136   189
@@ -207,6 +198,7 @@ rgb = [ ...
    244   109    67
    213    62    79
    158     1    66  ] / 255;
+
 
 % Hurricane localized in the sea
 nc_file_1 = '../HURSAT-B1/2004/HURSAT_b1_v06_2004260N11331_KARL_c20170721/2004260N11331.KARL.2004.09.19.1800.41.GOE-12.097.hursat-b1.v06.nc';
@@ -227,7 +219,6 @@ hurricane_lat_cent_1 = ncread(nc_file_1,'archer_lat');
 colorized_hurricane_image_1 = colorize(hurricane_IR_image_1);
 
 % plot kind of hurricane data that we have for the project
-%{
 figure
 set(gcf, 'Position',  [100, 100, 1000, 1000])
 subplot(2,2,1)
@@ -245,9 +236,7 @@ title("KARL Hurricane visible")
 subplot(2,2,4)
 imshow(colorized_hurricane_image_1);
 title("RGB KARL Hurricane with our kelvin scale")
-%}
 
-%{
 % plot the colorized hurricane image and transform it on the same figure
 for i = 0:2
     modified_hurricane_image_1 = translate_flip_rotate_crop(colorized_hurricane_image_1);
@@ -266,36 +255,59 @@ annotated_hurricane_shape(hurricane_visible_image_1, 80, 'c.', [1000,1500,2000,2
 %}
 
 % Download HURSAT-B1 dataset from 2004 to 2009
-%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, ".")
+disp("Downloading dataset");
+%download_HURSAT_B1("https://www.ncei.noaa.gov/data/hurricane-satellite-hursat-b1/archive/v06/", base_year, end_year, "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\")
 
 % Filter the dataset (preprocessing)
-[X, y, number_good_images] = preprocessing();
+[X, y, number_good_images] = preprocessing("..\dataset\HURSAT-B1");
 
 % Split into training set and test set
 [X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
+%[X_train, y_train, X_test, y_test] = traintestsplityear(X,y, number_good_images, 2004, base_year, end_year);
 
 % Split the training set into a training set and a validation set
-[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
+[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);4
+%[X_train_s, y_train_s, X_validation, y_validation] = traintestsplityear(X_train,y_train, number_good_images, 2004, base_year, end_year);
+
+X_train_2 = cat(3, X_train_s{:});
+X_train_2 = reshape(X_train_2, [224, 224, 1, length(X_train_s)]);
+
+y_train_2 = y_train_s';
+y_train_2 = double(y_train_2);
+
+X_validation_2 = cat(3, X_validation{:});
+X_validation_2 = reshape(X_validation_2, [224, 224, 1, length(X_validation)]);
+
+y_validation_2 = y_validation';
+y_validation_2 = double(y_validation_2);
 
 % Model
-[layers, options] = convo_neural_network(X_validation, y_validation);
+[layers, options] = convo_neural_network(X_validation_2, y_validation_2);
+
+% to avoid errors
+try
+    nnet.internal.cnngpu.reluForward(1);
+catch ME
+end
 
 % Evaluation of the model
-% TEST DEBUG
-%y_train = num2cell(y_train);
+trained_CNN = trainNetwork(X_train_2, y_train_2, layers, options);
 
-%X_train = cell2mat(X_train);
+X_test_2 = cat(3, X_test{:});
+X_test_2 = reshape(X_test_2, [224, 224, 1, length(X_test)]);
 
-%X_train = cell2table(X_train);
-
-trained_CNN = trainNetwork(X_train, y_train, layers, options);
+y_test_2 = y_test';
+y_test_2 = double(y_test_2);
 
 % Test the model
-test_cnn(trained_CNN, X_test, y_test);
+test_cnn(trained_CNN, X_test_2, y_test_2);
+
+% saves the trained CNN in the current working directory
+save trained_CNN;
 
 % plot activations
-plot_activations(trained_CNN, X_test, y_test)
-
+plot_cnn(trained_CNN, X_test, y_test);
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -476,7 +488,7 @@ function result = getFiles(parentDir, isFolder)
 end
 
 % preprocessing phase
-function [X, y, number_good_images] = preprocessing()
+function [X, y, number_good_images] = preprocessing(folder_path)
 
     number_good_image = 0;
     number_good_image_by_year = 0;
@@ -486,7 +498,7 @@ function [X, y, number_good_images] = preprocessing()
     y = [];
     number_good_images = [];
 
-    folder_path = "..\dataset\HURSAT-B1"; % set as param ?
+    %folder_path = "..\dataset\HURSAT-B1"; % set as param ?
 
     % create a folder to store the preprocessed data
     if ~exist('preprocessed_data', 'dir')
@@ -588,6 +600,9 @@ function [X, y, number_good_images] = preprocessing()
         disp("Number of good images:" + number_good_image_by_year)
         disp("Number of wrong images:" + number_wrong_image_by_year)
         number_good_images = [number_good_images, number_good_image_by_year];
+        %number_good_images(end+1, 1) = number_good_image_by_year;
+        disp("CLASS");          
+        disp(class(number_good_images));
     end
     
     disp("Total number of good images: " + number_good_image)
@@ -601,38 +616,38 @@ end
 function [layers, options] = convo_neural_network(X_validation, y_validation)
     layers = [
         imageInputLayer([224, 224, 1]) % 1 : grayscale image 3: RGB image
-        convolution2dLayer(5, 32)
+        convolution2dLayer(5, 32, 'Name', 'conv_1')
         batchNormalizationLayer
-        maxPooling2dLayer(5, 'Stride', 2)
+        maxPooling2dLayer(5, 'Stride', 2, 'Name', 'maxpool_1')
         dropoutLayer(0.2)
-        convolution2dLayer(3, 64)
+        convolution2dLayer(3, 64, 'Name', 'conv_2')
         batchNormalizationLayer
-        maxPooling2dLayer(3, 'Stride', 2)
+        maxPooling2dLayer(3, 'Stride', 2, 'Name', 'maxpool_2')
         dropoutLayer(0.2)
-        convolution2dLayer(3, 64)
+        convolution2dLayer(3, 64, 'Name', 'conv_3')
         batchNormalizationLayer
-        maxPooling2dLayer(3, 'Stride', 1)
+        maxPooling2dLayer(3, 'Stride', 1, 'Name', 'maxpool_3')
         dropoutLayer(0.2)
-        convolution2dLayer(3, 64)
+        convolution2dLayer(3, 64, 'Name', 'conv_4')
         batchNormalizationLayer
-        maxPooling2dLayer(3, 'Stride', 1)
+        maxPooling2dLayer(3, 'Stride', 1, 'Name', 'maxpool_4')
         dropoutLayer(0.2)
-        convolution2dLayer(3, 128)
+        convolution2dLayer(3, 128, 'Name', 'conv_5')
         batchNormalizationLayer
-        maxPooling2dLayer(3, 'Stride', 1)
+        maxPooling2dLayer(3, 'Stride', 1, 'Name', 'maxpool_5')
         dropoutLayer(0.2)
-        convolution2dLayer(3, 128)
+        convolution2dLayer(3, 128, 'Name', 'conv_6')
         batchNormalizationLayer
-        maxPooling2dLayer(3, 'Stride', 1)
+        maxPooling2dLayer(3, 'Stride', 1, 'Name', 'maxpool_6')
         dropoutLayer(0.2)
         flattenLayer
-        fullyConnectedLayer(512)
+        fullyConnectedLayer(512, 'Name', 'fc_1')
         reluLayer
         dropoutLayer(0.4)
-        fullyConnectedLayer(64)
+        fullyConnectedLayer(64, 'Name', 'fc_2')
         reluLayer
         dropoutLayer(0.2)
-        fullyConnectedLayer(1)
+        fullyConnectedLayer(1, 'Name', 'fc_3')
         reluLayer
         regressionLayer
     ];
@@ -644,7 +659,7 @@ function [layers, options] = convo_neural_network(X_validation, y_validation)
         'MiniBatchSize', 64, ...
         'InitialLearnRate', 5e-5, ...
         'Shuffle', 'every-epoch', ...
-        'ValidationData', {X_validation,y_validation}, ...
+        'ValidationData', {X_validation, y_validation}, ...
         'ValidationFrequency', 30, ...
         'Verbose', false, ...
         'Plots', 'training-progress', ...
@@ -662,10 +677,23 @@ function [layers, options] = convo_neural_network(X_validation, y_validation)
 end
 
 % Hyperparameter tuning for the CNN to find the best parameters
+function optimized_options = hyperparameter_tuning()
+    optimVars = [
+        optimizableVariable('solverName', {'adam', 'sgd'}, 'Type', 'categorical');
+        optimizableVariable('MaxEpochs', {500, 1000, 1500}, 'Type', 'categorical');
+        optimizableVariable('MiniBatchSize', {32, 64, 128}, 'Type', 'categorical');
+        optimizableVariable('InitialLearnRate', {5e-5, 5e-3}, 'Type', 'categorical');
+    ];
+    ObjFcn = makeObjFcn(X_train, Y_Train, X_validation, Y_validation)
+    BayesObject = bayesopt(ObjFcn, optimVars, ...
+        'IsObjectiveDeterministic', false, ...
+        'UseParallel', false);
+end
+
 
 % To see in the preprocessing phase
 % train/test split according to the year when the hurricane occurred
-function [X_train, y_train, X_test, y_test] = traintestsplityear(X,y,number_good_images,year)
+function [X_train, y_train, X_test, y_test] = traintestsplityear(X, y, number_good_images, year, base_year, end_year)
     diff_year = year - base_year + 1;
     max_diff_year = end_year - base_year + 1;
 
@@ -729,10 +757,13 @@ end
 % plot outputs of each layer of our CNN architecture
 function plot_cnn(trained_network, X_test, y_test)
     % get the first image of the test dataset
-    img = readimage(X_test, 1);
+    %newImg = cell2mat(X_test{1});
+    %img = imread(newImg);
+    %img = readimage(X_test{1}, 1);
+    img = X_test{1};
 
     % get the first image of the test dataset
-    label = y_test.Labels(1);
+    %label = y_test.Labels(1);
 
     % get the output of each layer
     layer_1 = 'conv_1';
@@ -776,6 +807,9 @@ function plot_cnn(trained_network, X_test, y_test)
 
     layer_14 = 'fc_2';
     fc2Features = activations(trained_network, img, layer_14);
+
+    %layer_15 = 'fc_3';
+    %fc3Features = activations(trained_network, img, layer_15);
 
     % plot the output of each layer
     figure
@@ -836,7 +870,8 @@ function plot_cnn(trained_network, X_test, y_test)
 
     subplot(4,4,15)
     imshow(img)
-    title(label)
+    %title(label)
+    title("test")
 
     colormap autumn
 
