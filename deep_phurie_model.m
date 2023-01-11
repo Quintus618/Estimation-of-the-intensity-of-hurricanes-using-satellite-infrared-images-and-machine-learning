@@ -329,9 +329,6 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
     %base_year = 2004;
     years_apart = last_year - base_year;
 
-    %folder_path = "C:\Users\momop\Travail\Poliba\image_processing\projet\dataset\";
-    % TODO check if file already downloaded
-
     % creates the base folder of the dataset if it doesn't already exists 
     if ~exist(strcat(folder_path, filesep, 'HURSAT-B1'))
         mkdir(folder_path, 'HURSAT-B1');
@@ -345,8 +342,6 @@ function download_HURSAT_B1(base_url, base_year, last_year, folder_path)
         if ~exist(strcat(folder_path, filesep, num2str(year)), 'dir')
             mkdir(folder_path, num2str(year));
         end
-    
-        %fprintf('it=%i\n', i);
         
         % reads the raw content of the dataset webpage
         url=strcat(base_url, num2str(year));
@@ -971,13 +966,6 @@ function modified_image = translate_flip_rotate_crop(image)
         %disp("Rotated image")
     end   
 end
-
-
-
-
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
