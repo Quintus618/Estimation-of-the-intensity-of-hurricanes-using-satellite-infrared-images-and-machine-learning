@@ -263,10 +263,9 @@ annotated_hurricane_shape(hurricane_visible_image_1, 80, 'c.', [1000,1500,2000,2
 
 % Split into training set and test set
 [X_train, y_train, X_test, y_test] = traintestsplit(X,y, training_percentage);
-%[X_train, y_train, X_test, y_test] = traintestsplityear(X,y, number_good_images, 2004, base_year, end_year);
 
 % Split the training set into a training set and a validation set
-[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);4
+[X_train_s, y_train_s, X_validation, y_validation] = traintestsplit(X_train,y_train, training_percentage);
 %[X_train_s, y_train_s, X_validation, y_validation] = traintestsplityear(X_train,y_train, number_good_images, 2004, base_year, end_year);
 
 X_train_2 = cat(3, X_train_s{:});
